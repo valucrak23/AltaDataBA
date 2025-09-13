@@ -2,7 +2,7 @@
 
 ## Datos del proyecto
 - Nombre y Apellido: Agostina Cruz, Alfredo Cubillo, Valentina Ijelchuk
-- Materia: Aplicaciones Híbridas 2
+- Materia: Aplicaciones Híbridas
 - Docente: Jhonatan Cruz
 - Comisión: DWM4AP
 
@@ -15,35 +15,6 @@ API REST para gestionar eventos culturales, recitales y talleres en Buenos Aires
 - **Sistema de categorías** - Filtrado por tipo de evento (gastronomía, tecnología, visitas, teatro, etc.)
 - **Integración con Google Maps** - Coordenadas y búsqueda por ubicación
 - **Información útil** - Cómo llegar, precios, alojamiento, recomendaciones
-
-## 🛠 Tecnologías
-
-- **Node.js** - Runtime de JavaScript
-- **Express.js** - Framework web
-- **MongoDB** - Base de datos NoSQL
-- **Mongoose** - ODM para MongoDB
-
-## 📋 Tipos de Eventos
-
-1. **🎵 Recitales** - Conciertos y presentaciones musicales
-2. **🎨 Eventos Culturales** - Exposiciones, festivales, ferias
-3. **📚 Talleres** - Cursos, workshops, capacitaciones
-
-## ⚙️ Instalación
-
-1. Clona el repositorio
-2. Instala las dependencias: `npm install`
-3. Configura las variables de entorno en un archivo `.env`
-4. Ejecuta la aplicación: `npm start`
-
-## 🔧 Variables de entorno
-
-```env
-URI_DB=mongodb://localhost:27017/eventos_culturales_bsas
-PORT=3000
-```
-
-## 📡 Endpoints
 
 ### 👥 Usuarios
 - `GET /api/usuarios` - Listar usuarios
@@ -169,11 +140,3 @@ GET /api/eventos/ubicacion?lat=-34.6037&lng=-58.3816&radio=5000
 
 - `npm start` - Iniciar servidor en modo producción
 - `npm run dev` - Iniciar servidor en modo desarrollo con auto-reload
-
-## 📝 Notas adicionales
-
-- La API está optimizada para eventos en Buenos Aires
-- Incluye validaciones de datos
-- Manejo de errores robusto
-- Respuestas en español
-- Preparada para integración con apps móviles híbridas
