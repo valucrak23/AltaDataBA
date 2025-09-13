@@ -1,0 +1,30 @@
+{
+  "name": "api-eventos-culturales-bsas",
+  "version": "1.0.0",
+  "description": "API para eventos culturales, recitales y talleres en Buenos Aires",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --watch index.js",
+    "dev": "node --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Jonathan",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.1"
+  },
+  "keywords": [
+    "eventos",
+    "culturales",
+    "recitales",
+    "talleres",
+    "buenos-aires",
+    "api",
+    "nodejs",
+    "express",
+    "mongodb"
+  ]
+}

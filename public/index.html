@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎭 Eventos Culturales Buenos Aires</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Indie+Flower:wght@400&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>🎭 Eventos Culturales Buenos Aires</h1>
+        <p class="subtitle">Descubre recitales, eventos culturales y talleres en la ciudad</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="navigation">
+        <button class="nav-btn active" data-section="eventos">🎭 Eventos</button>
+        <button class="nav-btn" data-section="usuarios">👥 Usuarios</button>
+        <button class="nav-btn" data-section="categorias">🏷️ Categorías</button>
+    </nav>
+
+    <!-- Quick Links -->
+    <section class="main-content" style="padding-top:0;">
+        <div class="filters" style="margin-top:1rem;">
+            <div>
+                <strong>Endpoints rápidos:</strong>
+            </div>
+            <div>
+                <a class="btn btn-secondary" href="/api/eventos" target="_blank">GET /api/eventos</a>
+                <a class="btn btn-secondary" href="/api/categorias" target="_blank">GET /api/categorias</a>
+                <a class="btn btn-secondary" href="/api/usuarios" target="_blank">GET /api/usuarios</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Eventos Section -->
+        <section id="eventos" class="content-section active">
+            <div class="section-header">
+                <h2>🎭 Gestión de Eventos</h2>
+                <button class="btn btn-primary" onclick="showEventForm()">➕ Nuevo Evento</button>
+            </div>
+
+            <!-- Eventos List -->
+            <div class="filters">
+                <select id="evento-tipo-filter">
+                    <option value="">Todos los tipos</option>
+                    <option value="recital">🎵 Recitales</option>
+                    <option value="evento_cultural">🎨 Eventos Culturales</option>
+                    <option value="taller">📚 Talleres</option>
+                </select>
+                <select id="evento-categoria-filter">
+                    <option value="">Todas las categorías</option>
+                </select>
+                <button class="btn btn-secondary" onclick="loadEventos()">🔍 Filtrar</button>
+            </div>
+
+            <div id="eventos-list" class="items-list">
+                <!-- Los eventos se cargarán aquí -->
+            </div>
+
+            <!-- Evento Form Modal -->
+            <div id="evento-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeEventForm()">&times;</span>
+                    <h3 id="evento-form-title">Nuevo Evento</h3>
+                    <form id="evento-form">
+                        <div class="form-group">
+                            <label for="evento-titulo">Título:</label>
+                            <input type="text" id="evento-titulo" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="evento-descripcion">Descripción:</label>
+                            <textarea id="evento-descripcion" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="evento-tipo">Tipo:</label>
+                            <select id="evento-tipo" required>
+                                <option value="recital">🎵 Recital</option>
+                                <option value="evento_cultural">🎨 Evento Cultural</option>
+                                <option value="taller">📚 Taller</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="evento-categoria">Categoría:</label>
+                            <select id="evento-categoria" required>
+                                <!-- Se llenará dinámicamente -->
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="evento-fecha">Fecha:</label>
+                                <input type="date" id="evento-fecha" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="evento-hora">Hora:</label>
+                                <input type="time" id="evento-hora" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="evento-ubicacion-nombre">Nombre del lugar:</label>
+                            <input type="text" id="evento-ubicacion-nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="evento-ubicacion-direccion">Dirección:</label>
+                            <input type="text" id="evento-ubicacion-direccion" required>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="evento-lat">Latitud:</label>
+                                <input type="number" id="evento-lat" step="any" placeholder="-34.6037">
+                            </div>
+                            <div class="form-group">
+                                <label for="evento-lng">Longitud:</label>
+                                <input type="number" id="evento-lng" step="any" placeholder="-58.3816">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="evento-gratuito"> Evento gratuito
+                                </label>
+                            </div>
+                            <div class="form-group" id="precio-group">
+                                <label for="evento-precio">Precio (ARS):</label>
+                                <input type="number" id="evento-precio" min="0" placeholder="0">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="evento-recomendaciones">Recomendaciones (separadas por comas):</label>
+                            <input type="text" id="evento-recomendaciones" placeholder="Llegar temprano, Traer documento">
+                        </div>
+                        <div class="form-group">
+                            <label for="evento-contacto">Contacto:</label>
+                            <input type="text" id="evento-contacto" placeholder="info@evento.com">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeEventForm()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Usuarios Section -->
+        <section id="usuarios" class="content-section">
+            <div class="section-header">
+                <h2>👥 Gestión de Usuarios</h2>
+                <button class="btn btn-primary" onclick="showUserForm()">➕ Nuevo Usuario</button>
+            </div>
+
+            <div id="usuarios-list" class="items-list">
+                <!-- Los usuarios se cargarán aquí -->
+            </div>
+
+            <!-- Usuario Form Modal -->
+            <div id="usuario-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeUserForm()">&times;</span>
+                    <h3 id="usuario-form-title">Nuevo Usuario</h3>
+                    <form id="usuario-form">
+                        <div class="form-group">
+                            <label for="usuario-nombre">Nombre:</label>
+                            <input type="text" id="usuario-nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="usuario-email">Email:</label>
+                            <input type="email" id="usuario-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="usuario-password">Contraseña:</label>
+                            <input type="password" id="usuario-password" required minlength="6">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeUserForm()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categorías Section -->
+        <section id="categorias" class="content-section">
+            <div class="section-header">
+                <h2>🏷️ Gestión de Categorías</h2>
+                <button class="btn btn-primary" onclick="showCategoryForm()">➕ Nueva Categoría</button>
+            </div>
+
+            <div id="categorias-list" class="items-list">
+                <!-- Las categorías se cargarán aquí -->
+            </div>
+
+            <!-- Categoría Form Modal -->
+            <div id="categoria-modal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeCategoryForm()">&times;</span>
+                    <h3 id="categoria-form-title">Nueva Categoría</h3>
+                    <form id="categoria-form">
+                        <div class="form-group">
+                            <label for="categoria-nombre">Nombre:</label>
+                            <input type="text" id="categoria-nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria-descripcion">Descripción:</label>
+                            <textarea id="categoria-descripcion" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria-icono">Icono (emoji):</label>
+                            <input type="text" id="categoria-icono" placeholder="🎭" maxlength="2">
+                        </div>
+                        <div class="form-group">
+                            <label for="categoria-color">Color:</label>
+                            <input type="color" id="categoria-color" value="#007bff">
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-secondary" onclick="closeCategoryForm()">Cancelar</button>
+                            <button type="submit" class="btn btn-primary">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="loading-overlay">
+        <div class="spinner"></div>
+        <p>Cargando...</p>
+    </div>
+
+    <!-- Toast Messages -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <footer class="footer">
+        <p><strong>Aplicaciones Híbridas</strong> — Docente: Jhonatan Cruz — Comisión: DWM4AP</p>
+        <p>Alumnos: Agostina Cruz, Alfredo Cubillo, Valentina Ijelchuk</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

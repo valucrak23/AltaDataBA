@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Frontend</title>
+</head>
+<body>
+    <h1>Test de API</h1>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            try {
+                console.log('Probando API...');
+                
+                // Test categorías
+                const response = await fetch('/api/categorias');
+                const data = await response.json();
+                
+                console.log('Respuesta de categorías:', data);
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>Categorías (${data.total}):</h2>
+                    <ul>
+                        ${data.data.map(cat => `<li>${cat.icono} ${cat.nombre}</li>`).join('')}
+                    </ul>
+                `;
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        // Ejecutar test al cargar
+        window.addEventListener('load', testAPI);
+    </script>
+</body>
+</html>
