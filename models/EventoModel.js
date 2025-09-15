@@ -80,6 +80,6 @@ const eventoSchema = new Schema({
     }
 });
 
-const Evento = mongoose.model('Evento', eventoSchema);
+const Eventos = mongoose.model('Eventos', eventoSchema);
 
-export default Evento;
+export default Eventos;

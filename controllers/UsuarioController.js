@@ -41,7 +41,8 @@ const crearUsuario = async (request, response) => {
 // Listar todos los usuarios
 const listarUsuarios = async (request, response) => {
     try {
-        const usuarios = await Usuario.find({}, { password: 0 });
+        const usuarios = await Usuario.find();
+        console.log(usuarios);
         response.status(200).json({
             msg: 'Usuarios obtenidos exitosamente',
             data: usuarios,
