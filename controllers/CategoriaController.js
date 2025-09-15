@@ -43,13 +43,10 @@ const listarCategorias = async (request, response) => {
             filtros.activa = activa === 'true';
         }
 
-        // Búsqueda por nombre/descripcion
+        // Búsqueda por nombre
         if (q && typeof q === 'string') {
             const regex = new RegExp(q.trim(), 'i');
-            filtros.$or = [
-                { nombre: regex },
-                { descripcion: regex }
-            ];
+            filtros.nombre = regex;
         }
 
         const categorias = await Categoria.find(filtros).sort({ nombre: 1 });

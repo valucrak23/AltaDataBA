@@ -41,12 +41,23 @@ const crearUsuario = async (request, response) => {
 // Listar todos los usuarios
 const listarUsuarios = async (request, response) => {
     try {
-        const usuarios = await Usuario.find();
-        console.log(usuarios);
+        const { q } = request.query;
+        
+        let filtros = {};
+        
+        // Búsqueda por nombre
+        if (q && typeof q === 'string') {
+            const regex = new RegExp(q.trim(), 'i');
+            filtros.nombre = regex;
+        }
+
+        const usuarios = await Usuario.find(filtros, { password: 0 }).sort({ nombre: 1 });
+        
         response.status(200).json({
             msg: 'Usuarios obtenidos exitosamente',
             data: usuarios,
-            total: usuarios.length
+            total: usuarios.length,
+            filtros_aplicados: filtros
         });
     } catch (error) {
         response.status(500).json({ msg: 'Error del servidor', error: error.message });

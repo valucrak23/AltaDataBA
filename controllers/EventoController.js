@@ -53,14 +53,10 @@ const listarEventos = async (request, response) => {
             if (fecha_hasta) filtros.fecha.$lte = new Date(fecha_hasta);
         }
 
-        // Búsqueda por texto en título o descripción (q)
+        // Búsqueda por título (q)
         if (q && typeof q === 'string') {
             const regex = new RegExp(q.trim(), 'i');
-            filtros.$or = [
-                { titulo: regex },
-                { descripcion: regex },
-                { tipo: regex }
-            ];
+            filtros.titulo = regex;
         }
 
         const eventos = await Evento.find(filtros)
