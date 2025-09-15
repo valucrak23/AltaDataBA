@@ -13,16 +13,11 @@ API REST para gestionar eventos culturales, recitales y talleres en Buenos Aires
 - **Gestión de usuarios** - Registro y autenticación de usuarios
 - **Gestión de eventos** - Recitales, eventos culturales y talleres
 - **Sistema de categorías** - Filtrado por tipo de evento (gastronomía, tecnología, visitas, teatro, etc.)
-- **Integración con Google Maps** - Coordenadas y búsqueda por ubicación
 - **Información útil** - Cómo llegar, precios, alojamiento, recomendaciones
 
 ### 👥 Usuarios
-- `GET /api/usuarios` - Listar usuarios
-- `GET /api/usuarios/:id` - Obtener usuario por ID
-- `POST /api/usuarios` - Crear usuario
-- `PUT /api/usuarios/:id` - Actualizar usuario
-- `DELETE /api/usuarios/:id` - Eliminar usuario
-
+- `GET /api/usuarios`
+- `GET /api/usuarios/"id"` - Obtener usuario por ID
 **Ejemplo de creación de usuario:**
 ```json
 {
@@ -33,20 +28,12 @@ API REST para gestionar eventos culturales, recitales y talleres en Buenos Aires
 ```
 
 ### 🎭 Eventos
-- `GET /api/eventos` - Listar eventos (con filtros)
-- `GET /api/eventos?q=rock` - Buscar por título/descripción
-- `GET /api/eventos/ubicacion` - Buscar eventos por ubicación
-- `GET /api/eventos/:id` - Obtener evento por ID
-- `POST /api/eventos` - Crear evento
-- `PUT /api/eventos/:id` - Actualizar evento
-- `DELETE /api/eventos/:id` - Eliminar evento
+- `GET /api/eventos`
+- `GET /api/eventos?q=rock` - Buscar por nombre
+- `GET /api/eventos/"id"` - Obtener evento por ID
 
 **Filtros disponibles para eventos:**
-- `?tipo=recital` - Filtrar por tipo
-- `?categoria=id_categoria` - Filtrar por categoría
-- `?activo=true` - Solo eventos activos
-- `?fecha_desde=2024-01-01` - Desde fecha
-- `?fecha_hasta=2024-12-31` - Hasta fecha
+- `?q=Talleres` - Filtrar por nombre
 
 **Ejemplo de creación de evento:**
 ```json
@@ -81,12 +68,9 @@ API REST para gestionar eventos culturales, recitales y talleres en Buenos Aires
 ```
 
 ### 🏷️ Categorías
-- `GET /api/categorias` - Listar categorías
-- `GET /api/categorias?q=rock` - Buscar por nombre/descripción
-- `GET /api/categorias/:id` - Obtener categoría por ID
-- `POST /api/categorias` - Crear categoría
-- `PUT /api/categorias/:id` - Actualizar categoría
-- `DELETE /api/categorias/:id` - Eliminar categoría
+- `GET /api/categorias`
+- `GET /api/categorias?q=rock` - Buscar por nombre
+- `GET /api/categorias/"id"` - Obtener categoría por ID
 
 **Ejemplo de categoría:**
 ```json
@@ -101,14 +85,7 @@ API REST para gestionar eventos culturales, recitales y talleres en Buenos Aires
 ## 🗺️ Integración con Google Maps
 
 La API incluye coordenadas geográficas para cada evento, permitiendo:
-- Visualización en mapas
-- Búsqueda por proximidad
-- Cálculo de distancias
-- Integración con Google Maps API
-
-**Búsqueda por ubicación:**
-```
-GET /api/eventos/ubicacion?lat=-34.6037&lng=-58.3816&radio=5000
+```- Futura Integración con Google Maps API
 ```
 
 ## 📊 Estructura de la Base de Datos
@@ -135,8 +112,3 @@ GET /api/eventos/ubicacion?lat=-34.6037&lng=-58.3816&radio=5000
 - `descripcion` - Descripción
 - `icono` - Icono emoji
 - `color` - Color hexadecimal
-
-## 🚀 Scripts disponibles
-
-- `npm start` - Iniciar servidor en modo producción
-- `npm run dev` - Iniciar servidor en modo desarrollo con auto-reload
