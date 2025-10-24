@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadEventos();
     loadUsuarios();
     setupFormHandlers();
+    setupFilterHandlers();
 });
 
 // ===== NAVEGACIÓN =====
@@ -336,6 +337,20 @@ function setupFormHandlers() {
         const precioGroup = document.getElementById('precio-group');
         precioGroup.style.display = this.checked ? 'none' : 'block';
     });
+}
+
+function setupFilterHandlers() {
+    // Filtros de eventos
+    const tipoFilter = document.getElementById('evento-tipo-filter');
+    const categoriaFilter = document.getElementById('evento-categoria-filter');
+    
+    if (tipoFilter) {
+        tipoFilter.addEventListener('change', loadEventos);
+    }
+    
+    if (categoriaFilter) {
+        categoriaFilter.addEventListener('change', loadEventos);
+    }
 }
 
 // ===== MODALES =====
