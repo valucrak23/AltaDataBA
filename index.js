@@ -43,11 +43,10 @@ const app = express();
 
 app.use( express.json() );
 
-// Servir archivos estáticos desde la raíz
-app.use(express.static('public'));
+app.use('/', express.static('public'));
 
-// Ruta principal para mostrar información de la API
-app.get('/api-info', (request, response) => {
+
+app.get('/', (request, response) => {
     response.send(`
         <h1>🎭 API de Eventos Culturales Buenos Aires</h1>
         <p>API REST para eventos culturales, recitales y talleres en Buenos Aires</p>
@@ -63,15 +62,8 @@ app.get('/api-info', (request, response) => {
             <li>🎨 Eventos Culturales</li>
             <li>📚 Talleres</li>
         </ul>
-        <h2>Interfaz Web:</h2>
-        <p><a href="/">Ver interfaz web</a></p>
     `);
-});
-
-// Ruta raíz para servir el index.html
-app.get('/', (request, response) => {
-    response.sendFile('index.html', { root: 'public' });
-});
+})
 
 routerAPI(app);
 
