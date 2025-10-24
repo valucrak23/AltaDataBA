@@ -19,6 +19,7 @@
         <button class="nav-btn active" data-section="eventos">🎭 Eventos</button>
         <button class="nav-btn" data-section="usuarios">👥 Usuarios</button>
         <button class="nav-btn" data-section="categorias">🏷️ Categorías</button>
+        <button class="nav-btn" data-section="endpoints">🔗 Endpoints</button>
     </nav>
 
     <!-- Quick Links -->
@@ -226,6 +227,167 @@
             </div>
         </section>
     </main>
+
+    <!-- Endpoints Section -->
+    <section id="endpoints" class="content-section">
+        <div class="section-header">
+            <h2>🔗 Documentación de Endpoints</h2>
+            <p>Lista completa de todos los endpoints disponibles en la API</p>
+        </div>
+
+        <div class="endpoints-container">
+            <!-- Eventos Endpoints -->
+            <div class="endpoint-group">
+                <h3>🎭 Eventos</h3>
+                <div class="endpoint-list">
+                    <div class="endpoint-item">
+                        <span class="method get">GET</span>
+                        <span class="url">/api/eventos</span>
+                        <span class="description">Obtener todos los eventos</span>
+                        <a href="/api/eventos" target="_blank" class="btn btn-small">Probar</a>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method get">GET</span>
+                        <span class="url">/api/eventos/:id</span>
+                        <span class="description">Obtener evento por ID</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method post">POST</span>
+                        <span class="url">/api/eventos</span>
+                        <span class="description">Crear nuevo evento</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method put">PUT</span>
+                        <span class="url">/api/eventos/:id</span>
+                        <span class="description">Actualizar evento</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method delete">DELETE</span>
+                        <span class="url">/api/eventos/:id</span>
+                        <span class="description">Eliminar evento</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method get">GET</span>
+                        <span class="url">/api/eventos/ubicacion?lat=&lng=&radio=</span>
+                        <span class="description">Buscar eventos por ubicación</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Usuarios Endpoints -->
+            <div class="endpoint-group">
+                <h3>👥 Usuarios</h3>
+                <div class="endpoint-list">
+                    <div class="endpoint-item">
+                        <span class="method get">GET</span>
+                        <span class="url">/api/usuarios</span>
+                        <span class="description">Obtener todos los usuarios</span>
+                        <a href="/api/usuarios" target="_blank" class="btn btn-small">Probar</a>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method get">GET</span>
+                        <span class="url">/api/usuarios/:id</span>
+                        <span class="description">Obtener usuario por ID</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method post">POST</span>
+                        <span class="url">/api/usuarios</span>
+                        <span class="description">Crear nuevo usuario</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method put">PUT</span>
+                        <span class="url">/api/usuarios/:id</span>
+                        <span class="description">Actualizar usuario</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method delete">DELETE</span>
+                        <span class="url">/api/usuarios/:id</span>
+                        <span class="description">Eliminar usuario</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categorías Endpoints -->
+            <div class="endpoint-group">
+                <h3>🏷️ Categorías</h3>
+                <div class="endpoint-list">
+                    <div class="endpoint-item">
+                        <span class="method get">GET</span>
+                        <span class="url">/api/categorias</span>
+                        <span class="description">Obtener todas las categorías</span>
+                        <a href="/api/categorias" target="_blank" class="btn btn-small">Probar</a>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method get">GET</span>
+                        <span class="url">/api/categorias/:id</span>
+                        <span class="description">Obtener categoría por ID</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method post">POST</span>
+                        <span class="url">/api/categorias</span>
+                        <span class="description">Crear nueva categoría</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method put">PUT</span>
+                        <span class="url">/api/categorias/:id</span>
+                        <span class="description">Actualizar categoría</span>
+                    </div>
+                    <div class="endpoint-item">
+                        <span class="method delete">DELETE</span>
+                        <span class="url">/api/categorias/:id</span>
+                        <span class="description">Eliminar categoría</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parámetros de Consulta -->
+            <div class="endpoint-group">
+                <h3>🔍 Parámetros de Consulta</h3>
+                <div class="query-params">
+                    <h4>Eventos:</h4>
+                    <ul>
+                        <li><code>?tipo=recital</code> - Filtrar por tipo (recital, evento_cultural, taller)</li>
+                        <li><code>?categoria=id</code> - Filtrar por categoría</li>
+                        <li><code>?activo=true</code> - Mostrar solo eventos activos</li>
+                        <li><code>?fecha_desde=2024-01-01</code> - Eventos desde fecha</li>
+                        <li><code>?fecha_hasta=2024-12-31</code> - Eventos hasta fecha</li>
+                        <li><code>?q=término</code> - Búsqueda por título</li>
+                    </ul>
+                    
+                    <h4>Usuarios:</h4>
+                    <ul>
+                        <li><code>?q=término</code> - Búsqueda por nombre</li>
+                    </ul>
+                    
+                    <h4>Categorías:</h4>
+                    <ul>
+                        <li><code>?activa=true</code> - Mostrar solo categorías activas</li>
+                        <li><code>?q=término</code> - Búsqueda por nombre</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Ejemplos de Respuesta -->
+            <div class="endpoint-group">
+                <h3>📋 Ejemplos de Respuesta</h3>
+                <div class="response-examples">
+                    <h4>Respuesta exitosa:</h4>
+                    <pre><code>{
+  "msg": "Eventos obtenidos exitosamente",
+  "data": [...],
+  "total": 25,
+  "filtros_aplicados": {...}
+}</code></pre>
+                    
+                    <h4>Respuesta de error:</h4>
+                    <pre><code>{
+  "msg": "Error del servidor",
+  "error": "Descripción del error"
+}</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Loading Overlay -->
     <div id="loading" class="loading-overlay">
