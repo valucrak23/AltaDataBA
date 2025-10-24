@@ -110,7 +110,7 @@ async function apiCall(endpoint, options = {}) {
 // ===== CATEGORÍAS =====
 async function loadCategorias() {
     try {
-         const response = await apiCall('/api/categorias');
+         const response = await apiCall('/categorias');
         categorias = response.data;
         
         // Actualizar selectores de categorías
@@ -181,7 +181,7 @@ async function loadEventos() {
         const tipoFilter = document.getElementById('evento-tipo-filter')?.value || '';
         const categoriaFilter = document.getElementById('evento-categoria-filter')?.value || '';
         
-         let endpoint = '/api/eventos';
+         let endpoint = '/eventos';
         const params = new URLSearchParams();
         
         if (tipoFilter) params.append('tipo', tipoFilter);
@@ -280,7 +280,7 @@ function getTipoName(tipo) {
 // ===== USUARIOS =====
 async function loadUsuarios() {
     try {
-         const response = await apiCall('/api/usuarios');
+         const response = await apiCall('/usuarios');
         displayUsuarios(response.data);
     } catch (error) {
         console.error('Error cargando usuarios:', error);
@@ -443,7 +443,7 @@ async function handleEventoSubmit(e) {
              contacto: document.getElementById('evento-contacto').value
          };
         
-         const endpoint = currentEditingId ? `/api/eventos/${currentEditingId}` : '/api/eventos';
+         const endpoint = currentEditingId ? `/eventos/${currentEditingId}` : '/eventos';
         const method = currentEditingId ? 'PUT' : 'POST';
         
         await apiCall(endpoint, {
@@ -470,7 +470,7 @@ async function handleUsuarioSubmit(e) {
             password: document.getElementById('usuario-password').value
         };
         
-         const endpoint = currentEditingId ? `/api/usuarios/${currentEditingId}` : '/api/usuarios';
+         const endpoint = currentEditingId ? `/usuarios/${currentEditingId}` : '/usuarios';
         const method = currentEditingId ? 'PUT' : 'POST';
         
         await apiCall(endpoint, {
@@ -498,7 +498,7 @@ async function handleCategoriaSubmit(e) {
             color: document.getElementById('categoria-color').value
         };
         
-         const endpoint = currentEditingId ? `/api/categorias/${currentEditingId}` : '/api/categorias';
+         const endpoint = currentEditingId ? `/categorias/${currentEditingId}` : '/categorias';
         const method = currentEditingId ? 'PUT' : 'POST';
         
         await apiCall(endpoint, {
@@ -518,7 +518,7 @@ async function handleCategoriaSubmit(e) {
 // ===== FUNCIONES DE CARGA DE DATOS =====
 async function loadEventoData(eventoId) {
     try {
-         const response = await apiCall(`/api/eventos/${eventoId}`);
+         const response = await apiCall(`/eventos/${eventoId}`);
         const evento = response.data;
         
         document.getElementById('evento-titulo').value = evento.titulo;
@@ -547,7 +547,7 @@ async function loadEventoData(eventoId) {
 
 async function loadUsuarioData(usuarioId) {
     try {
-         const response = await apiCall(`/api/usuarios/${usuarioId}`);
+         const response = await apiCall(`/usuarios/${usuarioId}`);
         const usuario = response.data;
         
         document.getElementById('usuario-nombre').value = usuario.nombre;
@@ -561,7 +561,7 @@ async function loadUsuarioData(usuarioId) {
 
 async function loadCategoriaData(categoriaId) {
     try {
-         const response = await apiCall(`/api/categorias/${categoriaId}`);
+         const response = await apiCall(`/categorias/${categoriaId}`);
         const categoria = response.data;
         
         document.getElementById('categoria-nombre').value = categoria.nombre;
@@ -592,7 +592,7 @@ async function deleteEvento(eventoId) {
     if (!confirm('¿Estás seguro de que quieres eliminar este evento?')) return;
     
     try {
-         await apiCall(`/api/eventos/${eventoId}`, { method: 'DELETE' });
+         await apiCall(`/eventos/${eventoId}`, { method: 'DELETE' });
         showToast('Evento eliminado exitosamente', 'success');
         loadEventos();
     } catch (error) {
@@ -604,7 +604,7 @@ async function deleteUsuario(usuarioId) {
     if (!confirm('¿Estás seguro de que quieres eliminar este usuario?')) return;
     
     try {
-         await apiCall(`/api/usuarios/${usuarioId}`, { method: 'DELETE' });
+         await apiCall(`/usuarios/${usuarioId}`, { method: 'DELETE' });
         showToast('Usuario eliminado exitosamente', 'success');
         loadUsuarios();
     } catch (error) {
@@ -616,7 +616,7 @@ async function deleteCategoria(categoriaId) {
     if (!confirm('¿Estás seguro de que quieres eliminar esta categoría?')) return;
     
     try {
-         await apiCall(`/api/categorias/${categoriaId}`, { method: 'DELETE' });
+         await apiCall(`/categorias/${categoriaId}`, { method: 'DELETE' });
         showToast('Categoría eliminada exitosamente', 'success');
         loadCategorias();
     } catch (error) {
