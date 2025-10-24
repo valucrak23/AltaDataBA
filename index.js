@@ -43,9 +43,10 @@ const app = express();
 
 app.use( express.json() );
 
-app.use('/', express.static('public'));
+// Servir archivos estáticos desde /public
+app.use('/public', express.static('public'));
 
-
+// Ruta principal para mostrar información de la API
 app.get('/', (request, response) => {
     response.send(`
         <h1>🎭 API de Eventos Culturales Buenos Aires</h1>
@@ -62,8 +63,15 @@ app.get('/', (request, response) => {
             <li>🎨 Eventos Culturales</li>
             <li>📚 Talleres</li>
         </ul>
+        <h2>Interfaz Web:</h2>
+        <p><a href="/public/index.html">Ver interfaz web</a></p>
     `);
-})
+});
+
+// Ruta alternativa para servir el index.html directamente
+app.get('/app', (request, response) => {
+    response.sendFile('index.html', { root: 'public' });
+});
 
 routerAPI(app);
 
