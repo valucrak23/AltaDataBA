@@ -1,5 +1,5 @@
-import Evento from '../models/EventoModel.js';
-import Categoria from '../models/CategoriaModel.js';
+import { EventoService } from '../services/EventoService.js';
+import { CategoriaService } from '../services/CategoriaService.js';
 
 // Crear nuevo evento
 const crearEvento = async (request, response) => {
@@ -7,22 +7,29 @@ const crearEvento = async (request, response) => {
         const eventoData = request.body;
         
         // Validar que la categoría existe
-        const categoria = await Categoria.findById(eventoData.categoria);
-        if (!categoria) {
-            return response.status(400).json({ 
-                msg: 'La categoría especificada no existe' 
-            });
+        try {
+            await CategoriaService.obtenerPorId(eventoData.categoria_id);
+        } catch (error) {
+            if (error.code === 'PGRST116') {
+                return response.status(400).json({ 
+                    msg: 'La categoría especificada no existe' 
+                });
+            }
+            throw error;
         }
 
-        const evento = new Evento(eventoData);
-        const data = await evento.save();
-        
-        // Poblar la categoría en la respuesta
-        await data.populate('categoria', 'nombre descripcion icono color');
+        // Preparar datos para Supabase
+        const eventoParaSupabase = {
+            ...eventoData,
+            categoria_id: eventoData.categoria_id,
+            fecha_creacion: new Date().toISOString()
+        };
+
+        const evento = await EventoService.crear(eventoParaSupabase);
         
         response.status(201).json({ 
             msg: "Evento creado exitosamente", 
-            data 
+            data: evento 
         });
     } catch (error) {
         response.status(500).json({ msg: 'Error del servidor', error: error.message });
@@ -47,21 +54,15 @@ const listarEventos = async (request, response) => {
         }
         
         // Filtros de fecha
-        if (fecha_desde || fecha_hasta) {
-            filtros.fecha = {};
-            if (fecha_desde) filtros.fecha.$gte = new Date(fecha_desde);
-            if (fecha_hasta) filtros.fecha.$lte = new Date(fecha_hasta);
-        }
+        if (fecha_desde) filtros.fecha_desde = fecha_desde;
+        if (fecha_hasta) filtros.fecha_hasta = fecha_hasta;
 
         // Búsqueda por título (q)
         if (q && typeof q === 'string') {
-            const regex = new RegExp(q.trim(), 'i');
-            filtros.titulo = regex;
+            filtros.titulo = q.trim();
         }
 
-        const eventos = await Evento.find(filtros)
-            .populate('categoria', 'nombre descripcion icono color')
-            .sort({ fecha: 1 });
+        const eventos = await EventoService.listar(filtros);
 
         response.status(200).json({
             msg: 'Eventos obtenidos exitosamente',
@@ -78,8 +79,7 @@ const listarEventos = async (request, response) => {
 const obtenerEventoPorId = async (request, response) => {
     try {
         const id = request.params.id;
-        const evento = await Evento.findById(id)
-            .populate('categoria', 'nombre descripcion icono color');
+        const evento = await EventoService.obtenerPorId(id);
         
         if (evento) {
             response.status(200).json({ 
@@ -90,7 +90,11 @@ const obtenerEventoPorId = async (request, response) => {
             response.status(404).json({ msg: 'Evento no encontrado' });
         }
     } catch (error) {
-        response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        if (error.code === 'PGRST116') { // No encontrado en Supabase
+            response.status(404).json({ msg: 'Evento no encontrado' });
+        } else {
+            response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        }
     }
 };
 
@@ -98,15 +102,15 @@ const obtenerEventoPorId = async (request, response) => {
 const eliminarEventoPorId = async (request, response) => {
     try {
         const id = request.params.id;
-        const evento = await Evento.findByIdAndDelete(id);
+        await EventoService.eliminarPorId(id);
         
-        if (evento) {
-            response.status(200).json({ msg: 'Evento eliminado exitosamente' });
-        } else {
-            response.status(404).json({ msg: 'Evento no encontrado' });
-        }
+        response.status(200).json({ msg: 'Evento eliminado exitosamente' });
     } catch (error) {
-        response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        if (error.code === 'PGRST116') { // No encontrado en Supabase
+            response.status(404).json({ msg: 'Evento no encontrado' });
+        } else {
+            response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        }
     }
 };
 
@@ -117,20 +121,20 @@ const actualizarEventoPorId = async (request, response) => {
         const updateData = request.body;
         
         // Si se actualiza la categoría, validar que existe
-        if (updateData.categoria) {
-            const categoria = await Categoria.findById(updateData.categoria);
-            if (!categoria) {
-                return response.status(400).json({ 
-                    msg: 'La categoría especificada no existe' 
-                });
+        if (updateData.categoria_id) {
+            try {
+                await CategoriaService.obtenerPorId(updateData.categoria_id);
+            } catch (error) {
+                if (error.code === 'PGRST116') {
+                    return response.status(400).json({ 
+                        msg: 'La categoría especificada no existe' 
+                    });
+                }
+                throw error;
             }
         }
 
-        const evento = await Evento.findByIdAndUpdate(
-            id, 
-            updateData, 
-            { new: true }
-        ).populate('categoria', 'nombre descripcion icono color');
+        const evento = await EventoService.actualizarPorId(id, updateData);
         
         if (evento) {
             response.status(200).json({ 
@@ -141,7 +145,11 @@ const actualizarEventoPorId = async (request, response) => {
             response.status(404).json({ msg: 'Evento no encontrado' });
         }
     } catch (error) {
-        response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        if (error.code === 'PGRST116') { // No encontrado en Supabase
+            response.status(404).json({ msg: 'Evento no encontrado' });
+        } else {
+            response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        }
     }
 };
 
@@ -156,17 +164,11 @@ const buscarEventosPorUbicacion = async (request, response) => {
             });
         }
 
-        const eventos = await Evento.find({
-            'ubicacion.coordenadas.lat': {
-                $gte: parseFloat(lat) - (radio / 111000), // Aproximación: 1 grado ≈ 111km
-                $lte: parseFloat(lat) + (radio / 111000)
-            },
-            'ubicacion.coordenadas.lng': {
-                $gte: parseFloat(lng) - (radio / (111000 * Math.cos(parseFloat(lat) * Math.PI / 180))),
-                $lte: parseFloat(lng) + (radio / (111000 * Math.cos(parseFloat(lat) * Math.PI / 180)))
-            },
-            activo: true
-        }).populate('categoria', 'nombre descripcion icono color');
+        const eventos = await EventoService.buscarPorUbicacion(
+            parseFloat(lat), 
+            parseFloat(lng), 
+            parseInt(radio)
+        );
 
         response.status(200).json({
             msg: 'Eventos encontrados por ubicación',

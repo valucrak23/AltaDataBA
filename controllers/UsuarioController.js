@@ -1,4 +1,4 @@
-import Usuario from '../models/UsuarioModel.js';
+import { UsuarioService } from '../services/UsuarioService.js';
 
 // Crear nuevo usuario
 const crearUsuario = async (request, response) => {
@@ -18,11 +18,17 @@ const crearUsuario = async (request, response) => {
             });
         }
 
-        const usuario = new Usuario({ nombre, email, password });
-        const data = await usuario.save();
+        const usuarioData = { 
+            nombre, 
+            email, 
+            password,
+            fecha_registro: new Date().toISOString()
+        };
+        
+        const usuario = await UsuarioService.crear(usuarioData);
         
         // No enviamos la contraseña en la respuesta
-        const usuarioRespuesta = data.toObject();
+        const usuarioRespuesta = { ...usuario };
         delete usuarioRespuesta.password;
         
         response.status(201).json({ 
@@ -30,7 +36,7 @@ const crearUsuario = async (request, response) => {
             data: usuarioRespuesta 
         });
     } catch (error) {
-        if (error.code === 11000) {
+        if (error.code === '23505') { // Error de duplicado en PostgreSQL
             response.status(400).json({ msg: 'El email ya está registrado' });
         } else {
             response.status(500).json({ msg: 'Error del servidor', error: error.message });
@@ -47,16 +53,21 @@ const listarUsuarios = async (request, response) => {
         
         // Búsqueda por nombre
         if (q && typeof q === 'string') {
-            const regex = new RegExp(q.trim(), 'i');
-            filtros.nombre = regex;
+            filtros.nombre = q.trim();
         }
 
-        const usuarios = await Usuario.find(filtros, { password: 0 }).sort({ nombre: 1 });
+        const usuarios = await UsuarioService.listar(filtros);
+        
+        // Remover contraseñas de la respuesta
+        const usuariosSinPassword = usuarios.map(usuario => {
+            const { password, ...usuarioSinPassword } = usuario;
+            return usuarioSinPassword;
+        });
         
         response.status(200).json({
             msg: 'Usuarios obtenidos exitosamente',
-            data: usuarios,
-            total: usuarios.length,
+            data: usuariosSinPassword,
+            total: usuariosSinPassword.length,
             filtros_aplicados: filtros
         });
     } catch (error) {
@@ -68,18 +79,25 @@ const listarUsuarios = async (request, response) => {
 const obtenerUsuarioPorId = async (request, response) => {
     try {
         const id = request.params.id;
-        const usuario = await Usuario.findById(id, { password: 0 });
+        const usuario = await UsuarioService.obtenerPorId(id);
         
         if (usuario) {
+            // No enviamos la contraseña en la respuesta
+            const { password, ...usuarioSinPassword } = usuario;
+            
             response.status(200).json({ 
                 msg: 'Usuario encontrado',
-                data: usuario 
+                data: usuarioSinPassword 
             });
         } else {
             response.status(404).json({ msg: 'Usuario no encontrado' });
         }
     } catch (error) {
-        response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        if (error.code === 'PGRST116') { // No encontrado en Supabase
+            response.status(404).json({ msg: 'Usuario no encontrado' });
+        } else {
+            response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        }
     }
 };
 
@@ -87,15 +105,15 @@ const obtenerUsuarioPorId = async (request, response) => {
 const eliminarUsuarioPorId = async (request, response) => {
     try {
         const id = request.params.id;
-        const usuario = await Usuario.findByIdAndDelete(id);
+        await UsuarioService.eliminarPorId(id);
         
-        if (usuario) {
-            response.status(200).json({ msg: 'Usuario eliminado exitosamente' });
-        } else {
-            response.status(404).json({ msg: 'Usuario no encontrado' });
-        }
+        response.status(200).json({ msg: 'Usuario eliminado exitosamente' });
     } catch (error) {
-        response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        if (error.code === 'PGRST116') { // No encontrado en Supabase
+            response.status(404).json({ msg: 'Usuario no encontrado' });
+        } else {
+            response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        }
     }
 };
 
@@ -117,23 +135,24 @@ const actualizarUsuarioPorId = async (request, response) => {
             updateData.password = password;
         }
 
-        const usuario = await Usuario.findByIdAndUpdate(
-            id, 
-            updateData, 
-            { new: true, select: '-password' }
-        );
+        const usuario = await UsuarioService.actualizarPorId(id, updateData);
         
         if (usuario) {
+            // No enviamos la contraseña en la respuesta
+            const { password, ...usuarioSinPassword } = usuario;
+            
             response.status(200).json({ 
                 msg: 'Usuario actualizado exitosamente',
-                data: usuario 
+                data: usuarioSinPassword 
             });
         } else {
             response.status(404).json({ msg: 'Usuario no encontrado' });
         }
     } catch (error) {
-        if (error.code === 11000) {
+        if (error.code === '23505') { // Error de duplicado en PostgreSQL
             response.status(400).json({ msg: 'El email ya está registrado' });
+        } else if (error.code === 'PGRST116') { // No encontrado en Supabase
+            response.status(404).json({ msg: 'Usuario no encontrado' });
         } else {
             response.status(500).json({ msg: 'Error del servidor', error: error.message });
         }

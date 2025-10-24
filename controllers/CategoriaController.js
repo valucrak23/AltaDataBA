@@ -1,5 +1,5 @@
-import Categoria from '../models/CategoriaModel.js';
-import Evento from '../models/EventoModel.js';
+import { CategoriaService } from '../services/CategoriaService.js';
+import { EventoService } from '../services/EventoService.js';
 
 // Crear nueva categoría
 const crearCategoria = async (request, response) => {
@@ -13,15 +13,23 @@ const crearCategoria = async (request, response) => {
             });
         }
 
-        const categoria = new Categoria({ nombre, descripcion, icono, color });
-        const data = await categoria.save();
+        const categoriaData = { 
+            nombre, 
+            descripcion, 
+            icono: icono || '', 
+            color: color || '#007bff',
+            activa: true,
+            fecha_creacion: new Date().toISOString()
+        };
+        
+        const categoria = await CategoriaService.crear(categoriaData);
         
         response.status(201).json({ 
             msg: "Categoría creada exitosamente", 
-            data 
+            data: categoria 
         });
     } catch (error) {
-        if (error.code === 11000) {
+        if (error.code === '23505') { // Error de duplicado en PostgreSQL
             response.status(400).json({ msg: 'Ya existe una categoría con ese nombre' });
         } else {
             response.status(500).json({ msg: 'Error del servidor', error: error.message });
@@ -45,11 +53,10 @@ const listarCategorias = async (request, response) => {
 
         // Búsqueda por nombre
         if (q && typeof q === 'string') {
-            const regex = new RegExp(q.trim(), 'i');
-            filtros.nombre = regex;
+            filtros.nombre = q.trim();
         }
 
-        const categorias = await Categoria.find(filtros).sort({ nombre: 1 });
+        const categorias = await CategoriaService.listar(filtros);
 
         response.status(200).json({
             msg: 'Categorías obtenidas exitosamente',
@@ -65,7 +72,7 @@ const listarCategorias = async (request, response) => {
 const obtenerCategoriaPorId = async (request, response) => {
     try {
         const id = request.params.id;
-        const categoria = await Categoria.findById(id);
+        const categoria = await CategoriaService.obtenerPorId(id);
         
         if (categoria) {
             response.status(200).json({ 
@@ -76,7 +83,11 @@ const obtenerCategoriaPorId = async (request, response) => {
             response.status(404).json({ msg: 'Categoría no encontrada' });
         }
     } catch (error) {
-        response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        if (error.code === 'PGRST116') { // No encontrado en Supabase
+            response.status(404).json({ msg: 'Categoría no encontrada' });
+        } else {
+            response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        }
     }
 };
 
@@ -86,22 +97,22 @@ const eliminarCategoriaPorId = async (request, response) => {
         const id = request.params.id;
         
         // Verificar si hay eventos asociados a esta categoría
-        const eventosAsociados = await Evento.countDocuments({ categoria: id });
-        if (eventosAsociados > 0) {
+        const eventos = await EventoService.listar({ categoria: id });
+        if (eventos.length > 0) {
             return response.status(400).json({ 
-                msg: `No se puede eliminar la categoría porque tiene ${eventosAsociados} eventos asociados` 
+                msg: `No se puede eliminar la categoría porque tiene ${eventos.length} eventos asociados` 
             });
         }
 
-        const categoria = await Categoria.findByIdAndDelete(id);
+        await CategoriaService.eliminarPorId(id);
         
-        if (categoria) {
-            response.status(200).json({ msg: 'Categoría eliminada exitosamente' });
-        } else {
-            response.status(404).json({ msg: 'Categoría no encontrada' });
-        }
+        response.status(200).json({ msg: 'Categoría eliminada exitosamente' });
     } catch (error) {
-        response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        if (error.code === 'PGRST116') { // No encontrado en Supabase
+            response.status(404).json({ msg: 'Categoría no encontrada' });
+        } else {
+            response.status(500).json({ msg: 'Error del servidor', error: error.message });
+        }
     }
 };
 
@@ -118,11 +129,7 @@ const actualizarCategoriaPorId = async (request, response) => {
         if (color) updateData.color = color;
         if (activa !== undefined) updateData.activa = activa;
 
-        const categoria = await Categoria.findByIdAndUpdate(
-            id, 
-            updateData, 
-            { new: true }
-        );
+        const categoria = await CategoriaService.actualizarPorId(id, updateData);
         
         if (categoria) {
             response.status(200).json({ 
@@ -133,8 +140,10 @@ const actualizarCategoriaPorId = async (request, response) => {
             response.status(404).json({ msg: 'Categoría no encontrada' });
         }
     } catch (error) {
-        if (error.code === 11000) {
+        if (error.code === '23505') { // Error de duplicado en PostgreSQL
             response.status(400).json({ msg: 'Ya existe una categoría con ese nombre' });
+        } else if (error.code === 'PGRST116') { // No encontrado en Supabase
+            response.status(404).json({ msg: 'Categoría no encontrada' });
         } else {
             response.status(500).json({ msg: 'Error del servidor', error: error.message });
         }

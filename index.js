@@ -1,5 +1,5 @@
 import express from 'express';
-import mongoose from 'mongoose';
+import supabase from './config/supabase.js';
 import dotenv from 'dotenv'
 import routerAPI from './routes/index.js';
 
@@ -7,12 +7,17 @@ dotenv.config();
 
 // Debug: mostramos las variables cargadas
 console.log('Variables de entorno cargadas:');
-console.log('URI_DB:', process.env.URI_DB);
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL);
 console.log('PORT:', process.env.PORT);
 
 // Verificamos que las variables de entorno estén definidas
-if (!process.env.URI_DB) {
-    console.error('Error: URI_DB no está definida en el archivo .env');
+if (!process.env.SUPABASE_URL) {
+    console.error('Error: SUPABASE_URL no está definida en el archivo .env');
+    process.exit(1);
+}
+
+if (!process.env.SUPABASE_ANON_KEY) {
+    console.error('Error: SUPABASE_ANON_KEY no está definida en el archivo .env');
     process.exit(1);
 }
 
@@ -21,13 +26,17 @@ if (!process.env.PORT) {
     process.exit(1);
 }
 
-// Creamos la conexión con la Base de Datos
-const urldb = process.env.URI_DB;
-mongoose.connect(urldb);
-const db = mongoose.connection;
-
-db.on('error', () => { console.error('Error de conexion')});
-db.once('open', () => { console.log('Conexion con al DB 👍')});
+// Verificar conexión con Supabase
+try {
+    const { data, error } = await supabase.from('api_usuarios').select('count').limit(1);
+    if (error) {
+        console.error('Error de conexión con Supabase:', error.message);
+    } else {
+        console.log('Conexión con Supabase exitosa 👍');
+    }
+} catch (error) {
+    console.error('Error al verificar conexión con Supabase:', error.message);
+}
 
 const PORT = process.env.PORT;
 const app = express();
