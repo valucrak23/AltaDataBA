@@ -19,7 +19,7 @@ export const EventoService = {
 
     // Obtener todos los eventos con filtros opcionales
     async listar(filtros = {}) {
-        let query = supabase.from('eventos').select(`
+        let query = supabase.from('api_eventos').select(`
             *,
             categoria:api_categorias(*)
         `);
@@ -84,7 +84,7 @@ export const EventoService = {
     // Eliminar evento por ID
     async eliminarPorId(id) {
         const { error } = await supabase
-            .from('eventos')
+            .from('api_eventos')
             .delete()
             .eq('id', id);
         
@@ -97,7 +97,7 @@ export const EventoService = {
         // Nota: Esta implementación es básica. Para mejor precisión geográfica,
         // se recomienda usar PostGIS con funciones como ST_DWithin
         const { data: eventos, error } = await supabase
-            .from('eventos')
+            .from('api_eventos')
             .select(`
                 *,
                 categoria:api_categorias(*)

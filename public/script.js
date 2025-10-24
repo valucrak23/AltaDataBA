@@ -110,7 +110,7 @@ async function apiCall(endpoint, options = {}) {
 // ===== CATEGORÍAS =====
 async function loadCategorias() {
     try {
-        const response = await apiCall('/categorias');
+         const response = await apiCall('/api/categorias');
         categorias = response.data;
         
         // Actualizar selectores de categorías
@@ -139,13 +139,13 @@ function updateCategoriaSelectors() {
                 selector.removeChild(selector.lastChild);
             }
             
-            // Agregar categorías
-            categorias.forEach(categoria => {
-                const option = document.createElement('option');
-                option.value = categoria._id;
-                option.textContent = `${categoria.icono} ${categoria.nombre}`;
-                selector.appendChild(option);
-            });
+             // Agregar categorías
+             categorias.forEach(categoria => {
+                 const option = document.createElement('option');
+                 option.value = categoria.id;
+                 option.textContent = `${categoria.icono} ${categoria.nombre}`;
+                 selector.appendChild(option);
+             });
         }
     });
 }
@@ -168,8 +168,8 @@ function displayCategorias(categoriasList) {
             </div>
             <div class="item-description">${categoria.descripcion}</div>
             <div class="item-actions">
-                <button class="btn btn-primary" onclick="editCategoria('${categoria._id}')">✏️ Editar</button>
-                <button class="btn btn-danger" onclick="deleteCategoria('${categoria._id}')">🗑️ Eliminar</button>
+                 <button class="btn btn-primary" onclick="editCategoria('${categoria.id}')">✏️ Editar</button>
+                 <button class="btn btn-danger" onclick="deleteCategoria('${categoria.id}')">🗑️ Eliminar</button>
             </div>
         </div>
     `).join('');
@@ -181,7 +181,7 @@ async function loadEventos() {
         const tipoFilter = document.getElementById('evento-tipo-filter')?.value || '';
         const categoriaFilter = document.getElementById('evento-categoria-filter')?.value || '';
         
-        let endpoint = '/eventos';
+         let endpoint = '/api/eventos';
         const params = new URLSearchParams();
         
         if (tipoFilter) params.append('tipo', tipoFilter);
@@ -207,9 +207,9 @@ function displayEventos(eventos) {
     }
     
     container.innerHTML = eventos.map(evento => {
-        const categoria = categorias.find(c => c._id === evento.categoria?._id);
-        const precio = evento.precio?.esGratuito ? 'Gratuito' : 
-                      `$${evento.precio?.monto?.toLocaleString()} ${evento.precio?.moneda || 'ARS'}`;
+         const categoria = categorias.find(c => c.id === evento.categoria_id);
+         const precio = evento.es_gratuito ? 'Gratuito' : 
+                       `$${evento.precio?.toLocaleString()} ARS`;
         
         return `
             <div class="item-card">
@@ -243,16 +243,16 @@ function displayEventos(eventos) {
                         <strong>Precio:</strong>
                         <span>${precio}</span>
                     </div>
-                    ${evento.informacionAdicional?.contacto ? `
-                        <div class="item-detail">
-                            <strong>Contacto:</strong>
-                            <span>${evento.informacionAdicional.contacto}</span>
-                        </div>
-                    ` : ''}
+                     ${evento.contacto ? `
+                         <div class="item-detail">
+                             <strong>Contacto:</strong>
+                             <span>${evento.contacto}</span>
+                         </div>
+                     ` : ''}
                 </div>
                 <div class="item-actions">
-                    <button class="btn btn-primary" onclick="editEvento('${evento._id}')">✏️ Editar</button>
-                    <button class="btn btn-danger" onclick="deleteEvento('${evento._id}')">🗑️ Eliminar</button>
+                 <button class="btn btn-primary" onclick="editEvento('${evento.id}')">✏️ Editar</button>
+                 <button class="btn btn-danger" onclick="deleteEvento('${evento.id}')">🗑️ Eliminar</button>
                 </div>
             </div>
         `;
@@ -280,7 +280,7 @@ function getTipoName(tipo) {
 // ===== USUARIOS =====
 async function loadUsuarios() {
     try {
-        const response = await apiCall('/usuarios');
+         const response = await apiCall('/api/usuarios');
         displayUsuarios(response.data);
     } catch (error) {
         console.error('Error cargando usuarios:', error);
@@ -314,8 +314,8 @@ function displayUsuarios(usuarios) {
                 </div>
             </div>
             <div class="item-actions">
-                <button class="btn btn-primary" onclick="editUsuario('${usuario._id}')">✏️ Editar</button>
-                <button class="btn btn-danger" onclick="deleteUsuario('${usuario._id}')">🗑️ Eliminar</button>
+                 <button class="btn btn-primary" onclick="editUsuario('${usuario.id}')">✏️ Editar</button>
+                 <button class="btn btn-danger" onclick="deleteUsuario('${usuario.id}')">🗑️ Eliminar</button>
             </div>
         </div>
     `).join('');
@@ -422,33 +422,28 @@ async function handleEventoSubmit(e) {
     e.preventDefault();
     
     try {
-        const formData = {
-            titulo: document.getElementById('evento-titulo').value,
-            descripcion: document.getElementById('evento-descripcion').value,
-            tipo: document.getElementById('evento-tipo').value,
-            categoria: document.getElementById('evento-categoria').value,
-            fecha: document.getElementById('evento-fecha').value,
-            hora: document.getElementById('evento-hora').value,
-            ubicacion: {
-                nombre: document.getElementById('evento-ubicacion-nombre').value,
-                direccion: document.getElementById('evento-ubicacion-direccion').value,
-                coordenadas: {
-                    lat: parseFloat(document.getElementById('evento-lat').value) || null,
-                    lng: parseFloat(document.getElementById('evento-lng').value) || null
-                }
-            },
-            precio: {
-                esGratuito: document.getElementById('evento-gratuito').checked,
-                monto: document.getElementById('evento-precio').value || 0,
-                moneda: 'ARS'
-            },
-            informacionAdicional: {
-                recomendaciones: document.getElementById('evento-recomendaciones').value.split(',').map(r => r.trim()).filter(r => r),
-                contacto: document.getElementById('evento-contacto').value
-            }
-        };
+         const formData = {
+             titulo: document.getElementById('evento-titulo').value,
+             descripcion: document.getElementById('evento-descripcion').value,
+             tipo: document.getElementById('evento-tipo').value,
+             categoria_id: document.getElementById('evento-categoria').value,
+             fecha: document.getElementById('evento-fecha').value,
+             hora: document.getElementById('evento-hora').value,
+             ubicacion: {
+                 nombre: document.getElementById('evento-ubicacion-nombre').value,
+                 direccion: document.getElementById('evento-ubicacion-direccion').value,
+                 coordenadas: {
+                     lat: parseFloat(document.getElementById('evento-lat').value) || null,
+                     lng: parseFloat(document.getElementById('evento-lng').value) || null
+                 }
+             },
+             es_gratuito: document.getElementById('evento-gratuito').checked,
+             precio: document.getElementById('evento-precio').value || 0,
+             recomendaciones: document.getElementById('evento-recomendaciones').value,
+             contacto: document.getElementById('evento-contacto').value
+         };
         
-        const endpoint = currentEditingId ? `/eventos/${currentEditingId}` : '/eventos';
+         const endpoint = currentEditingId ? `/api/eventos/${currentEditingId}` : '/api/eventos';
         const method = currentEditingId ? 'PUT' : 'POST';
         
         await apiCall(endpoint, {
@@ -475,7 +470,7 @@ async function handleUsuarioSubmit(e) {
             password: document.getElementById('usuario-password').value
         };
         
-        const endpoint = currentEditingId ? `/usuarios/${currentEditingId}` : '/usuarios';
+         const endpoint = currentEditingId ? `/api/usuarios/${currentEditingId}` : '/api/usuarios';
         const method = currentEditingId ? 'PUT' : 'POST';
         
         await apiCall(endpoint, {
@@ -503,7 +498,7 @@ async function handleCategoriaSubmit(e) {
             color: document.getElementById('categoria-color').value
         };
         
-        const endpoint = currentEditingId ? `/categorias/${currentEditingId}` : '/categorias';
+         const endpoint = currentEditingId ? `/api/categorias/${currentEditingId}` : '/api/categorias';
         const method = currentEditingId ? 'PUT' : 'POST';
         
         await apiCall(endpoint, {
@@ -523,27 +518,27 @@ async function handleCategoriaSubmit(e) {
 // ===== FUNCIONES DE CARGA DE DATOS =====
 async function loadEventoData(eventoId) {
     try {
-        const response = await apiCall(`/eventos/${eventoId}`);
+         const response = await apiCall(`/api/eventos/${eventoId}`);
         const evento = response.data;
         
         document.getElementById('evento-titulo').value = evento.titulo;
         document.getElementById('evento-descripcion').value = evento.descripcion;
         document.getElementById('evento-tipo').value = evento.tipo;
-        document.getElementById('evento-categoria').value = evento.categoria?._id || '';
-        document.getElementById('evento-fecha').value = evento.fecha?.split('T')[0] || '';
+        document.getElementById('evento-categoria').value = evento.categoria_id || '';
+        document.getElementById('evento-fecha').value = evento.fecha || '';
         document.getElementById('evento-hora').value = evento.hora || '';
         document.getElementById('evento-ubicacion-nombre').value = evento.ubicacion?.nombre || '';
         document.getElementById('evento-ubicacion-direccion').value = evento.ubicacion?.direccion || '';
         document.getElementById('evento-lat').value = evento.ubicacion?.coordenadas?.lat || '';
         document.getElementById('evento-lng').value = evento.ubicacion?.coordenadas?.lng || '';
-        document.getElementById('evento-gratuito').checked = evento.precio?.esGratuito || false;
-        document.getElementById('evento-precio').value = evento.precio?.monto || '';
-        document.getElementById('evento-recomendaciones').value = evento.informacionAdicional?.recomendaciones?.join(', ') || '';
-        document.getElementById('evento-contacto').value = evento.informacionAdicional?.contacto || '';
-        
-        // Actualizar visibilidad del precio
-        const precioGroup = document.getElementById('precio-group');
-        precioGroup.style.display = evento.precio?.esGratuito ? 'none' : 'block';
+        document.getElementById('evento-gratuito').checked = evento.es_gratuito || false;
+        document.getElementById('evento-precio').value = evento.precio || '';
+         document.getElementById('evento-recomendaciones').value = evento.recomendaciones || '';
+         document.getElementById('evento-contacto').value = evento.contacto || '';
+         
+         // Actualizar visibilidad del precio
+         const precioGroup = document.getElementById('precio-group');
+         precioGroup.style.display = evento.es_gratuito ? 'none' : 'block';
         
     } catch (error) {
         console.error('Error cargando datos del evento:', error);
@@ -552,7 +547,7 @@ async function loadEventoData(eventoId) {
 
 async function loadUsuarioData(usuarioId) {
     try {
-        const response = await apiCall(`/usuarios/${usuarioId}`);
+         const response = await apiCall(`/api/usuarios/${usuarioId}`);
         const usuario = response.data;
         
         document.getElementById('usuario-nombre').value = usuario.nombre;
@@ -566,7 +561,7 @@ async function loadUsuarioData(usuarioId) {
 
 async function loadCategoriaData(categoriaId) {
     try {
-        const response = await apiCall(`/categorias/${categoriaId}`);
+         const response = await apiCall(`/api/categorias/${categoriaId}`);
         const categoria = response.data;
         
         document.getElementById('categoria-nombre').value = categoria.nombre;
@@ -597,7 +592,7 @@ async function deleteEvento(eventoId) {
     if (!confirm('¿Estás seguro de que quieres eliminar este evento?')) return;
     
     try {
-        await apiCall(`/eventos/${eventoId}`, { method: 'DELETE' });
+         await apiCall(`/api/eventos/${eventoId}`, { method: 'DELETE' });
         showToast('Evento eliminado exitosamente', 'success');
         loadEventos();
     } catch (error) {
@@ -609,7 +604,7 @@ async function deleteUsuario(usuarioId) {
     if (!confirm('¿Estás seguro de que quieres eliminar este usuario?')) return;
     
     try {
-        await apiCall(`/usuarios/${usuarioId}`, { method: 'DELETE' });
+         await apiCall(`/api/usuarios/${usuarioId}`, { method: 'DELETE' });
         showToast('Usuario eliminado exitosamente', 'success');
         loadUsuarios();
     } catch (error) {
@@ -621,7 +616,7 @@ async function deleteCategoria(categoriaId) {
     if (!confirm('¿Estás seguro de que quieres eliminar esta categoría?')) return;
     
     try {
-        await apiCall(`/categorias/${categoriaId}`, { method: 'DELETE' });
+         await apiCall(`/api/categorias/${categoriaId}`, { method: 'DELETE' });
         showToast('Categoría eliminada exitosamente', 'success');
         loadCategorias();
     } catch (error) {
