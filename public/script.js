@@ -178,10 +178,11 @@ function displayCategorias(categoriasList) {
 // ===== EVENTOS =====
 async function loadEventos() {
     try {
+        console.log('Cargando eventos...');
         const tipoFilter = document.getElementById('evento-tipo-filter')?.value || '';
         const categoriaFilter = document.getElementById('evento-categoria-filter')?.value || '';
         
-         let endpoint = '/eventos';
+        let endpoint = '/eventos';
         const params = new URLSearchParams();
         
         if (tipoFilter) params.append('tipo', tipoFilter);
@@ -191,7 +192,9 @@ async function loadEventos() {
             endpoint += `?${params.toString()}`;
         }
         
+        console.log('Endpoint:', endpoint);
         const response = await apiCall(endpoint);
+        console.log('Eventos recibidos:', response.data);
         displayEventos(response.data);
     } catch (error) {
         console.error('Error cargando eventos:', error);
@@ -207,9 +210,9 @@ function displayEventos(eventos) {
     }
     
     container.innerHTML = eventos.map(evento => {
-         const categoria = categorias.find(c => c.id === evento.categoria_id);
-         const precio = evento.es_gratuito ? 'Gratuito' : 
-                       `$${evento.precio?.toLocaleString()} ARS`;
+        const categoria = categorias.find(c => c.id === evento.categoria_id);
+         const precio = evento.precio?.esGratuito ? 'Gratuito' : 
+                       `$${evento.precio?.monto?.toLocaleString()} ${evento.precio?.moneda || 'ARS'}`;
         
         return `
             <div class="item-card">
@@ -243,10 +246,10 @@ function displayEventos(eventos) {
                         <strong>Precio:</strong>
                         <span>${precio}</span>
                     </div>
-                     ${evento.contacto ? `
+                     ${evento.informacion_adicional?.contacto ? `
                          <div class="item-detail">
                              <strong>Contacto:</strong>
-                             <span>${evento.contacto}</span>
+                             <span>${evento.informacion_adicional.contacto}</span>
                          </div>
                      ` : ''}
                 </div>
@@ -437,10 +440,15 @@ async function handleEventoSubmit(e) {
                      lng: parseFloat(document.getElementById('evento-lng').value) || null
                  }
              },
-             es_gratuito: document.getElementById('evento-gratuito').checked,
-             precio: document.getElementById('evento-precio').value || 0,
-             recomendaciones: document.getElementById('evento-recomendaciones').value,
-             contacto: document.getElementById('evento-contacto').value
+             precio: {
+                 esGratuito: document.getElementById('evento-gratuito').checked,
+                 monto: parseFloat(document.getElementById('evento-precio').value) || 0,
+                 moneda: 'ARS'
+             },
+             informacion_adicional: {
+                 recomendaciones: document.getElementById('evento-recomendaciones').value,
+                 contacto: document.getElementById('evento-contacto').value
+             }
          };
         
          const endpoint = currentEditingId ? `/eventos/${currentEditingId}` : '/eventos';
@@ -531,14 +539,14 @@ async function loadEventoData(eventoId) {
         document.getElementById('evento-ubicacion-direccion').value = evento.ubicacion?.direccion || '';
         document.getElementById('evento-lat').value = evento.ubicacion?.coordenadas?.lat || '';
         document.getElementById('evento-lng').value = evento.ubicacion?.coordenadas?.lng || '';
-        document.getElementById('evento-gratuito').checked = evento.es_gratuito || false;
-        document.getElementById('evento-precio').value = evento.precio || '';
-         document.getElementById('evento-recomendaciones').value = evento.recomendaciones || '';
-         document.getElementById('evento-contacto').value = evento.contacto || '';
+         document.getElementById('evento-gratuito').checked = evento.precio?.esGratuito || false;
+         document.getElementById('evento-precio').value = evento.precio?.monto || '';
+         document.getElementById('evento-recomendaciones').value = evento.informacion_adicional?.recomendaciones || '';
+         document.getElementById('evento-contacto').value = evento.informacion_adicional?.contacto || '';
          
          // Actualizar visibilidad del precio
          const precioGroup = document.getElementById('precio-group');
-         precioGroup.style.display = evento.es_gratuito ? 'none' : 'block';
+         precioGroup.style.display = evento.precio?.esGratuito ? 'none' : 'block';
         
     } catch (error) {
         console.error('Error cargando datos del evento:', error);
@@ -589,14 +597,20 @@ async function editCategoria(categoriaId) {
 
 // ===== FUNCIONES DE ELIMINACIÓN =====
 async function deleteEvento(eventoId) {
+    console.log('Intentando eliminar evento:', eventoId);
     if (!confirm('¿Estás seguro de que quieres eliminar este evento?')) return;
     
     try {
-         await apiCall(`/eventos/${eventoId}`, { method: 'DELETE' });
+        console.log('Enviando petición DELETE...');
+        const response = await apiCall(`/eventos/${eventoId}`, { method: 'DELETE' });
+        console.log('Respuesta del servidor:', response);
         showToast('Evento eliminado exitosamente', 'success');
-        loadEventos();
+        console.log('Recargando eventos...');
+        await loadEventos();
+        console.log('Eventos recargados');
     } catch (error) {
         console.error('Error eliminando evento:', error);
+        showToast('Error al eliminar evento', 'error');
     }
 }
 

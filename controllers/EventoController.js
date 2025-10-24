@@ -102,10 +102,13 @@ const obtenerEventoPorId = async (request, response) => {
 const eliminarEventoPorId = async (request, response) => {
     try {
         const id = request.params.id;
+        console.log('Intentando eliminar evento con ID:', id); // Debug temporal
+        
         await EventoService.eliminarPorId(id);
         
         response.status(200).json({ msg: 'Evento eliminado exitosamente' });
     } catch (error) {
+        console.log('Error en eliminación:', error.message); // Debug temporal
         if (error.code === 'PGRST116') { // No encontrado en Supabase
             response.status(404).json({ msg: 'Evento no encontrado' });
         } else {

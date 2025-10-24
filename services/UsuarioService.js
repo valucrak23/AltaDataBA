@@ -16,7 +16,7 @@ export const UsuarioService = {
 
     // Obtener todos los usuarios con filtros opcionales
     async listar(filtros = {}) {
-        let query = supabase.from('usuarios').select('*');
+        let query = supabase.from('api_usuarios').select('*');
         
         // Aplicar filtros
         if (filtros.nombre) {
@@ -57,7 +57,7 @@ export const UsuarioService = {
     // Eliminar usuario por ID
     async eliminarPorId(id) {
         const { error } = await supabase
-            .from('usuarios')
+            .from('api_usuarios')
             .delete()
             .eq('id', id);
         

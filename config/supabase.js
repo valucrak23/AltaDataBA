@@ -9,14 +9,14 @@ if (!process.env.SUPABASE_URL) {
     process.exit(1);
 }
 
-if (!process.env.SUPABASE_ANON_KEY) {
-    console.error('Error: SUPABASE_ANON_KEY no está definida en el archivo .env');
+if (!process.env.SUPABASE_SERVICE_KEY) {
+    console.error('Error: SUPABASE_SERVICE_KEY no está definida en el archivo .env');
     process.exit(1);
 }
 
 // Crear cliente de Supabase
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 

@@ -16,8 +16,8 @@ if (!process.env.SUPABASE_URL) {
     process.exit(1);
 }
 
-if (!process.env.SUPABASE_ANON_KEY) {
-    console.error('Error: SUPABASE_ANON_KEY no está definida en el archivo .env');
+if (!process.env.SUPABASE_SERVICE_KEY) {
+    console.error('Error: SUPABASE_SERVICE_KEY no está definida en el archivo .env');
     process.exit(1);
 }
 
@@ -27,16 +27,20 @@ if (!process.env.PORT) {
 }
 
 // Verificar conexión con Supabase
-try {
-    const { data, error } = await supabase.from('api_usuarios').select('count').limit(1);
-    if (error) {
-        console.error('Error de conexión con Supabase:', error.message);
-    } else {
-        console.log('Conexión con Supabase exitosa 👍');
+async function verificarConexionSupabase() {
+    try {
+        const { data, error } = await supabase.from('api_usuarios').select('count').limit(1);
+        if (error) {
+            console.error('Error de conexión con Supabase:', error.message);
+        } else {
+            console.log('Conexión con Supabase exitosa 👍');
+        }
+    } catch (error) {
+        console.error('Error al verificar conexión con Supabase:', error.message);
     }
-} catch (error) {
-    console.error('Error al verificar conexión con Supabase:', error.message);
 }
+
+verificarConexionSupabase();
 
 const PORT = process.env.PORT;
 const app = express();

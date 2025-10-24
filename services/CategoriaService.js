@@ -16,7 +16,7 @@ export const CategoriaService = {
 
     // Obtener todas las categorías
     async listar(filtros = {}) {
-        let query = supabase.from('categorias').select('*');
+        let query = supabase.from('api_categorias').select('*');
         
         // Aplicar filtros
         if (filtros.activa !== undefined) {
@@ -57,7 +57,7 @@ export const CategoriaService = {
     // Eliminar categoría por ID
     async eliminarPorId(id) {
         const { error } = await supabase
-            .from('categorias')
+            .from('api_categorias')
             .delete()
             .eq('id', id);
         
