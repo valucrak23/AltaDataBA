@@ -70,6 +70,10 @@ const eventoSchema = new Schema({
         type: String,
         default: ''
     },
+    color: {
+        type: String,
+        default: '#007bff'
+    },
     activo: {
         type: Boolean,
         default: true

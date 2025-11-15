@@ -238,7 +238,7 @@ function displayEventos(eventos) {
                 <div class="item-header">
                     <div>
                         <h3 class="item-title">${evento.titulo}</h3>
-                        <span class="item-type">${getTipoIcon(evento.tipo)} ${getTipoName(evento.tipo)}</span>
+                        <span class="item-type" style="background-color: ${evento.color || '#007bff'}">${getTipoIcon(evento.tipo)} ${getTipoName(evento.tipo)}</span>
                     </div>
                 </div>
                 <div class="item-description">${evento.descripcion}</div>
@@ -478,7 +478,8 @@ async function handleEventoSubmit(e) {
             informacionAdicional: {
                 recomendaciones: document.getElementById('evento-recomendaciones').value.split(',').map(r => r.trim()).filter(r => r),
                 contacto: document.getElementById('evento-contacto').value
-            }
+            },
+            color: document.getElementById('evento-color').value || '#007bff'
         };
         
         const endpoint = currentEditingId ? `/eventos/${currentEditingId}` : '/eventos';
@@ -627,6 +628,7 @@ async function loadEventoData(eventoId) {
         document.getElementById('evento-precio').value = evento.precio?.monto || '';
         document.getElementById('evento-recomendaciones').value = evento.informacionAdicional?.recomendaciones?.join(', ') || '';
         document.getElementById('evento-contacto').value = evento.informacionAdicional?.contacto || '';
+        document.getElementById('evento-color').value = evento.color || '#007bff';
         
         // Actualizar visibilidad del precio
         const precioGroup = document.getElementById('precio-group');
