@@ -90,10 +90,33 @@ async function apiCall(endpoint, options = {}) {
             ...options
         });
         
-        const data = await response.json();
+        // Leer la respuesta primero como texto para poder manejarla mejor
+        const text = await response.text();
+        let data;
+        
+        // Intentar parsear como JSON si el Content-Type indica que es JSON
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+            try {
+                data = JSON.parse(text);
+            } catch (jsonError) {
+                // Si falla el parseo JSON pero el servidor dice que es JSON, usar el texto
+                if (!response.ok) {
+                    throw new Error(text || `Error ${response.status}: ${response.statusText}`);
+                }
+                throw new Error('Respuesta no es JSON válido: ' + text.substring(0, 100));
+            }
+        } else {
+            // Si no es JSON y hay un error, lanzar el texto como error
+            if (!response.ok) {
+                throw new Error(text || `Error ${response.status}: ${response.statusText}`);
+            }
+            throw new Error('Respuesta no es JSON válido');
+        }
         
         if (!response.ok) {
-            throw new Error(data.msg || 'Error en la petición');
+            throw new Error(data.msg || data.error || text || `Error ${response.status}: ${response.statusText}`);
         }
         
         return data;
