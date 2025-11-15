@@ -1,4 +1,6 @@
 import Usuario from '../models/UsuarioModel.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 // Crear nuevo usuario
 const crearUsuario = async (request, response) => {
@@ -18,7 +20,15 @@ const crearUsuario = async (request, response) => {
             });
         }
 
-        const usuario = new Usuario({ nombre, email, password });
+        // Hashear la contraseña antes de guardarla
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        const usuario = new Usuario({ 
+            nombre, 
+            email: email.toLowerCase().trim(), 
+            password: hashedPassword 
+        });
         const data = await usuario.save();
         
         // No enviamos la contraseña en la respuesta
@@ -140,10 +150,65 @@ const actualizarUsuarioPorId = async (request, response) => {
     }
 };
 
+// Autenticar usuario (Login)
+const autenticarUsuario = async (request, response) => {
+    try {
+        const { email, password } = request.body;
+        
+        // Validaciones básicas
+        if (!email || !password) {
+            return response.status(400).json({ 
+                msg: 'Faltan campos requeridos: email, password' 
+            });
+        }
+
+        // Buscar usuario por email
+        const usuario = await Usuario.findOne({ email: email.toLowerCase().trim() });
+        
+        // Si el usuario no existe, devolver error genérico (por seguridad)
+        if (!usuario) {
+            return response.status(401).json({ 
+                msg: 'Credenciales inválidas' 
+            });
+        }
+
+        // Verificar contraseña con bcrypt
+        const passwordValida = await bcrypt.compare(password, usuario.password);
+        
+        if (!passwordValida) {
+            return response.status(401).json({ 
+                msg: 'Credenciales inválidas' 
+            });
+        }
+
+        // Generar JWT token
+        const JWT_SECRET = process.env.JWT_SECRET || 'tu_secret_key_cambiar_en_produccion';
+        const token = jwt.sign(
+            { 
+                id: usuario._id, 
+                email: usuario.email 
+            },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        // Devolver token
+        response.status(200).json({ 
+            jwt: token 
+        });
+    } catch (error) {
+        response.status(500).json({ 
+            msg: 'Error del servidor', 
+            error: error.message 
+        });
+    }
+};
+
 export { 
     crearUsuario, 
     listarUsuarios, 
     obtenerUsuarioPorId, 
     eliminarUsuarioPorId, 
-    actualizarUsuarioPorId 
+    actualizarUsuarioPorId,
+    autenticarUsuario 
 };

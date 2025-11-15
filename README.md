@@ -16,14 +16,41 @@ API REST para gestionar eventos culturales, recitales y talleres en Buenos Aires
 - **Información útil** - Cómo llegar, precios, alojamiento, recomendaciones
 
 ### 👥 Usuarios
-- `GET /api/usuarios`
+- `GET /api/usuarios` - Listar todos los usuarios
 - `GET /api/usuarios/"id"` - Obtener usuario por ID
+- `POST /api/usuarios` - Crear nuevo usuario
+- `POST /api/usuarios/auth` - Autenticar usuario (Login)
+- `PUT /api/usuarios/"id"` - Actualizar usuario
+- `DELETE /api/usuarios/"id"` - Eliminar usuario
+
 **Ejemplo de creación de usuario:**
 ```json
 {
   "nombre": "Juan Pérez",
   "email": "juan@email.com",
   "password": "mipassword123"
+}
+```
+
+**Ejemplo de login (POST /api/usuarios/auth):**
+```json
+{
+  "email": "juan@email.com",
+  "password": "mipassword123"
+}
+```
+
+**Respuesta exitosa del login:**
+```json
+{
+  "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+**Respuesta de error del login (401):**
+```json
+{
+  "msg": "Credenciales inválidas"
 }
 ```
 

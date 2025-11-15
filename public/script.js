@@ -351,6 +351,9 @@ function setupFormHandlers() {
     // Usuario form
     document.getElementById('usuario-form').addEventListener('submit', handleUsuarioSubmit);
     
+    // Login form
+    document.getElementById('login-form').addEventListener('submit', handleLoginSubmit);
+    
     // Categoría form
     document.getElementById('categoria-form').addEventListener('submit', handleCategoriaSubmit);
     
@@ -402,6 +405,28 @@ function showUserForm(usuarioId = null) {
 function closeUserForm() {
     document.getElementById('usuario-modal').style.display = 'none';
     currentEditingId = null;
+}
+
+function showLoginForm() {
+    const modal = document.getElementById('login-modal');
+    const form = document.getElementById('login-form');
+    const resultDiv = document.getElementById('login-result');
+    
+    form.reset();
+    resultDiv.style.display = 'none';
+    resultDiv.className = '';
+    resultDiv.textContent = '';
+    modal.style.display = 'block';
+}
+
+function closeLoginForm() {
+    const modal = document.getElementById('login-modal');
+    const resultDiv = document.getElementById('login-result');
+    
+    modal.style.display = 'none';
+    resultDiv.style.display = 'none';
+    resultDiv.className = '';
+    resultDiv.textContent = '';
 }
 
 function showCategoryForm(categoriaId = null) {
@@ -497,6 +522,60 @@ async function handleUsuarioSubmit(e) {
         
     } catch (error) {
         console.error('Error guardando usuario:', error);
+    }
+}
+
+async function handleLoginSubmit(e) {
+    e.preventDefault();
+    
+    const resultDiv = document.getElementById('login-result');
+    resultDiv.style.display = 'block';
+    
+    try {
+        const formData = {
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-password').value
+        };
+        
+        const response = await apiCall('/usuarios/auth', {
+            method: 'POST',
+            body: JSON.stringify(formData)
+        });
+        
+        // Mostrar el token recibido
+        const token = response.jwt || response.token;
+        if (token) {
+            resultDiv.className = 'success';
+            resultDiv.style.backgroundColor = '#d4edda';
+            resultDiv.style.color = '#155724';
+            resultDiv.style.border = '1px solid #c3e6cb';
+            resultDiv.innerHTML = `
+                <strong>✅ Login exitoso!</strong><br>
+                <strong>Token JWT:</strong><br>
+                <code style="word-break: break-all; font-size: 12px;">${token}</code><br>
+                <button class="btn btn-secondary" onclick="navigator.clipboard.writeText('${token}'); showToast('Token copiado al portapapeles', 'success');" style="margin-top: 10px;">📋 Copiar Token</button>
+            `;
+            
+            // Guardar token en localStorage (opcional)
+            localStorage.setItem('authToken', token);
+            
+            showToast('Login exitoso', 'success');
+            
+            // Opcional: cerrar el modal después de 3 segundos
+            setTimeout(() => {
+                closeLoginForm();
+            }, 5000);
+        } else {
+            throw new Error('No se recibió token en la respuesta');
+        }
+        
+    } catch (error) {
+        resultDiv.className = 'error';
+        resultDiv.style.backgroundColor = '#f8d7da';
+        resultDiv.style.color = '#721c24';
+        resultDiv.style.border = '1px solid #f5c6cb';
+        resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+        console.error('Error en login:', error);
     }
 }
 
