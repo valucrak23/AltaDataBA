@@ -86,10 +86,11 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="evento-categoria">Categoría:</label>
-                            <select id="evento-categoria" required>
-                                <!-- Se llenará dinámicamente -->
-                            </select>
+                            <label>Categorías (selecciona una o más):</label>
+                            <div id="evento-categorias-container" style="border: 1px solid #ddd; padding: 10px; border-radius: 5px; max-height: 200px; overflow-y: auto;">
+                                <!-- Se llenará dinámicamente con checkboxes -->
+                            </div>
+                            <small style="color: #666;">Selecciona al menos una categoría y marca una como predominante (⭐)</small>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -141,6 +142,9 @@
                         <div class="form-group">
                             <label for="evento-color">Color:</label>
                             <input type="color" id="evento-color" value="#007bff">
+                            <small style="color: #666; display: block; margin-top: 5px;">
+                                💡 Se actualiza automáticamente según la categoría predominante. Puedes modificarlo manualmente si lo deseas.
+                            </small>
                         </div>
                         <div class="form-actions">
                             <button type="button" class="btn btn-secondary" onclick="closeEventForm()">Cancelar</button>

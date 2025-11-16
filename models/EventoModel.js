@@ -18,10 +18,26 @@ const eventoSchema = new Schema({
         enum: ['recital', 'evento_cultural', 'taller'],
         required: true
     },
-    categoria: {
+    categorias: {
+        type: [Schema.Types.ObjectId],
+        ref: 'Categoria',
+        required: true,
+        validate: {
+            validator: function(v) {
+                return v && v.length > 0;
+            },
+            message: 'Debe tener al menos una categoría'
+        }
+    },
+    categoriaPredominante: {
         type: Schema.Types.ObjectId,
         ref: 'Categoria',
         required: true
+    },
+    // Mantener por compatibilidad hacia atrás (deprecated)
+    categoria: {
+        type: Schema.Types.ObjectId,
+        ref: 'Categoria'
     },
     fecha: {
         type: Date,

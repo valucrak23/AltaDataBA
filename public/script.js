@@ -148,28 +148,122 @@ async function loadCategorias() {
 }
 
 function updateCategoriaSelectors() {
-    const selectors = [
-        'evento-categoria',
-        'evento-categoria-filter'
-    ];
+    // Actualizar selector de filtro (select simple)
+    const filterSelector = document.getElementById('evento-categoria-filter');
+    if (filterSelector) {
+        while (filterSelector.children.length > 1) {
+            filterSelector.removeChild(filterSelector.lastChild);
+        }
+        categorias.forEach(categoria => {
+            const option = document.createElement('option');
+            option.value = categoria._id;
+            option.textContent = `${categoria.icono} ${categoria.nombre}`;
+            filterSelector.appendChild(option);
+        });
+    }
     
-    selectors.forEach(selectorId => {
-        const selector = document.getElementById(selectorId);
-        if (selector) {
-            // Limpiar opciones existentes (excepto la primera)
-            while (selector.children.length > 1) {
-                selector.removeChild(selector.lastChild);
+    // Actualizar contenedor de categorías con checkboxes (para el formulario)
+    const categoriasContainer = document.getElementById('evento-categorias-container');
+    if (categoriasContainer) {
+        categoriasContainer.innerHTML = '';
+        categorias.forEach(categoria => {
+            const div = document.createElement('div');
+            div.style.marginBottom = '10px';
+            div.innerHTML = `
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" class="evento-categoria-checkbox" value="${categoria._id}" style="margin-right: 8px;">
+                    <input type="radio" name="evento-categoria-predominante" value="${categoria._id}" class="evento-categoria-predominante" style="margin-right: 5px;" title="Categoría predominante">
+                    <span>${categoria.icono} ${categoria.nombre}</span>
+                </label>
+            `;
+            categoriasContainer.appendChild(div);
+        });
+        
+        // Hacer que al seleccionar una checkbox, se pueda seleccionar como predominante
+        const checkboxes = categoriasContainer.querySelectorAll('.evento-categoria-checkbox');
+        const radios = categoriasContainer.querySelectorAll('.evento-categoria-predominante');
+        
+        // Función para actualizar el color basado en la categoría predominante
+        const updateColorFromPredominantCategory = () => {
+            const predominantRadio = categoriasContainer.querySelector('.evento-categoria-predominante:checked');
+            if (predominantRadio) {
+                const categoriaId = predominantRadio.value;
+                const categoria = categorias.find(c => c._id === categoriaId);
+                if (categoria && categoria.color) {
+                    const colorInput = document.getElementById('evento-color');
+                    if (colorInput) {
+                        // Solo actualizar si el usuario no ha modificado manualmente el color recientemente
+                        // Guardamos un flag para saber si fue cambio automático o manual
+                        if (!colorInput.dataset.manualChange) {
+                            colorInput.value = categoria.color;
+                        }
+                    }
+                }
             }
+        };
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const radio = categoriasContainer.querySelector(`input[type="radio"][value="${this.value}"]`);
+                if (this.checked) {
+                    radio.disabled = false;
+                    // Si es la primera categoría seleccionada, marcarla como predominante
+                    const checkedCount = categoriasContainer.querySelectorAll('.evento-categoria-checkbox:checked').length;
+                    if (checkedCount === 1) {
+                        radio.checked = true;
+                        updateColorFromPredominantCategory();
+                    }
+                } else {
+                    radio.disabled = true;
+                    radio.checked = false;
+                    // Si se desmarca la predominante, seleccionar la primera disponible
+                    const predominanteChecked = categoriasContainer.querySelector('.evento-categoria-predominante:checked');
+                    if (!predominanteChecked || predominanteChecked === radio) {
+                        const firstChecked = categoriasContainer.querySelector('.evento-categoria-checkbox:checked');
+                        if (firstChecked) {
+                            const firstRadio = categoriasContainer.querySelector(`input[type="radio"][value="${firstChecked.value}"]`);
+                            if (firstRadio) {
+                                firstRadio.checked = true;
+                                updateColorFromPredominantCategory();
+                            }
+                        }
+                    }
+                }
+            });
+        });
+        
+        // Listener para cuando se cambia la categoría predominante
+        radios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked) {
+                    updateColorFromPredominantCategory();
+                }
+            });
+        });
+        
+        // Deshabilitar radios de categorías no seleccionadas
+        radios.forEach(radio => {
+            const checkbox = categoriasContainer.querySelector(`input[type="checkbox"][value="${radio.value}"]`);
+            if (!checkbox.checked) {
+                radio.disabled = true;
+            }
+        });
+        
+        // Listener para permitir modificación manual del color
+        const colorInput = document.getElementById('evento-color');
+        if (colorInput) {
+            colorInput.addEventListener('input', function() {
+                // Marcar que el usuario modificó manualmente el color
+                this.dataset.manualChange = 'true';
+            });
             
-            // Agregar categorías
-            categorias.forEach(categoria => {
-                const option = document.createElement('option');
-                option.value = categoria._id;
-                option.textContent = `${categoria.icono} ${categoria.nombre}`;
-                selector.appendChild(option);
+            // Si el usuario borra el color manualmente, permitir que se actualice automáticamente de nuevo
+            colorInput.addEventListener('focus', function() {
+                // Opcional: remover el flag al enfocar para permitir cambios automáticos después de editar manualmente
+                // this.dataset.manualChange = 'false';
             });
         }
-    });
+    }
 }
 
 function displayCategorias(categoriasList) {
@@ -229,7 +323,41 @@ function displayEventos(eventos) {
     }
     
     container.innerHTML = eventos.map(evento => {
-        const categoria = categorias.find(c => c._id === evento.categoria?._id);
+        // Obtener categorías (compatibilidad hacia atrás con evento.categoria)
+        const categoriasList = evento.categorias || (evento.categoria ? [evento.categoria] : []);
+        const categoriaPredominante = evento.categoriaPredominante || evento.categoria;
+        const categoriaPredominanteId = categoriaPredominante?._id || categoriaPredominante;
+        
+        // Formatear categorías para mostrar
+        let categoriasHtml = '';
+        if (categoriasList.length > 0) {
+            categoriasHtml = categoriasList.map(cat => {
+                const catObj = typeof cat === 'object' ? cat : categorias.find(c => c._id === cat);
+                const catId = typeof cat === 'object' ? cat._id : cat;
+                const isPredominante = catId === categoriaPredominanteId;
+                
+                if (catObj) {
+                    return `
+                        <span style="
+                            display: inline-block;
+                            margin: 2px 5px 2px 0;
+                            padding: 4px 8px;
+                            border-radius: 4px;
+                            background-color: ${catObj.color || '#007bff'};
+                            color: white;
+                            font-size: 0.85em;
+                            ${isPredominante ? 'font-weight: bold; border: 2px solid #ffd700;' : 'opacity: 0.85;'}
+                        ">
+                            ${isPredominante ? '⭐ ' : ''}${catObj.icono || '🏷️'} ${catObj.nombre || 'Sin nombre'}
+                        </span>
+                    `;
+                }
+                return '';
+            }).filter(h => h).join('');
+        } else {
+            categoriasHtml = '<span style="color: #999;">Sin categorías</span>';
+        }
+        
         const precio = evento.precio?.esGratuito ? 'Gratuito' : 
                       `$${evento.precio?.monto?.toLocaleString()} ${evento.precio?.moneda || 'ARS'}`;
         
@@ -244,10 +372,10 @@ function displayEventos(eventos) {
                 <div class="item-description">${evento.descripcion}</div>
                 <div class="item-details">
                     <div class="item-detail">
-                        <strong>Categoría:</strong>
-                        <span style="color: ${categoria?.color || '#007bff'}">
-                            ${categoria?.icono || '🏷️'} ${categoria?.nombre || 'Sin categoría'}
-                        </span>
+                        <strong>Categorías:</strong>
+                        <div style="margin-top: 5px;">
+                            ${categoriasHtml}
+                        </div>
                     </div>
                     <div class="item-detail">
                         <strong>Fecha:</strong>
@@ -374,6 +502,23 @@ function showEventForm(eventoId = null) {
     title.textContent = eventoId ? 'Editar Evento' : 'Nuevo Evento';
     form.reset();
     
+    // Limpiar categorías seleccionadas y resetear flag de color manual
+    if (!eventoId) {
+        document.querySelectorAll('.evento-categoria-checkbox').forEach(cb => {
+            cb.checked = false;
+            const radio = document.querySelector(`input[type="radio"][value="${cb.value}"]`);
+            if (radio) {
+                radio.disabled = true;
+                radio.checked = false;
+            }
+        });
+        // Limpiar flag de cambio manual del color para permitir actualización automática
+        const colorInput = document.getElementById('evento-color');
+        if (colorInput) {
+            colorInput.dataset.manualChange = 'false';
+        }
+    }
+    
     if (eventoId) {
         loadEventoData(eventoId);
     }
@@ -455,11 +600,28 @@ async function handleEventoSubmit(e) {
     e.preventDefault();
     
     try {
+        // Obtener categorías seleccionadas
+        const categoriaCheckboxes = document.querySelectorAll('.evento-categoria-checkbox:checked');
+        const categoriasSeleccionadas = Array.from(categoriaCheckboxes).map(cb => cb.value);
+        
+        if (categoriasSeleccionadas.length === 0) {
+            showToast('Debes seleccionar al menos una categoría', 'error');
+            return;
+        }
+        
+        // Obtener categoría predominante
+        const categoriaPredominante = document.querySelector('.evento-categoria-predominante:checked')?.value;
+        if (!categoriaPredominante) {
+            showToast('Debes seleccionar una categoría predominante', 'error');
+            return;
+        }
+        
         const formData = {
             titulo: document.getElementById('evento-titulo').value,
             descripcion: document.getElementById('evento-descripcion').value,
             tipo: document.getElementById('evento-tipo').value,
-            categoria: document.getElementById('evento-categoria').value,
+            categorias: categoriasSeleccionadas,
+            categoriaPredominante: categoriaPredominante,
             fecha: document.getElementById('evento-fecha').value,
             hora: document.getElementById('evento-hora').value,
             ubicacion: {
@@ -617,7 +779,43 @@ async function loadEventoData(eventoId) {
         document.getElementById('evento-titulo').value = evento.titulo;
         document.getElementById('evento-descripcion').value = evento.descripcion;
         document.getElementById('evento-tipo').value = evento.tipo;
-        document.getElementById('evento-categoria').value = evento.categoria?._id || '';
+        
+        // Cargar múltiples categorías
+        const categoriasIds = evento.categorias?.map(c => typeof c === 'object' ? c._id : c) || 
+                              (evento.categoria ? [typeof evento.categoria === 'object' ? evento.categoria._id : evento.categoria] : []);
+        const categoriaPredominanteObj = evento.categoriaPredominante || null;
+        const categoriaPredominanteId = categoriaPredominanteObj?._id || 
+                                       evento.categoriaPredominante || 
+                                       (evento.categoria ? (typeof evento.categoria === 'object' ? evento.categoria._id : evento.categoria) : null);
+        
+        // Desmarcar todas las categorías primero
+        document.querySelectorAll('.evento-categoria-checkbox').forEach(cb => {
+            cb.checked = false;
+            const radio = document.querySelector(`input[type="radio"][value="${cb.value}"]`);
+            if (radio) radio.disabled = true;
+        });
+        
+        // Marcar las categorías seleccionadas
+        categoriasIds.forEach(catId => {
+            const checkbox = document.querySelector(`.evento-categoria-checkbox[value="${catId}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+                const radio = document.querySelector(`input[type="radio"][value="${catId}"]`);
+                if (radio) {
+                    radio.disabled = false;
+                    if (catId === categoriaPredominanteId) {
+                        radio.checked = true;
+                    }
+                }
+            }
+        });
+        
+        // Si no hay categoría predominante pero hay categorías, seleccionar la primera
+        if (!categoriaPredominanteId && categoriasIds.length > 0) {
+            const firstRadio = document.querySelector(`input[type="radio"][value="${categoriasIds[0]}"]`);
+            if (firstRadio) firstRadio.checked = true;
+        }
+        
         document.getElementById('evento-fecha').value = evento.fecha?.split('T')[0] || '';
         document.getElementById('evento-hora').value = evento.hora || '';
         document.getElementById('evento-ubicacion-nombre').value = evento.ubicacion?.nombre || '';
@@ -628,7 +826,43 @@ async function loadEventoData(eventoId) {
         document.getElementById('evento-precio').value = evento.precio?.monto || '';
         document.getElementById('evento-recomendaciones').value = evento.informacionAdicional?.recomendaciones?.join(', ') || '';
         document.getElementById('evento-contacto').value = evento.informacionAdicional?.contacto || '';
-        document.getElementById('evento-color').value = evento.color || '#007bff';
+        
+        // Cargar color: si el evento tiene color propio, usarlo; si no, usar el de la categoría predominante
+        let colorEvento = evento.color || null;
+        if (!colorEvento && categoriaPredominanteId) {
+            // Buscar la categoría predominante para obtener su color
+            const catPredObj = categoriaPredominanteObj || 
+                              categorias.find(c => c._id === categoriaPredominanteId);
+            if (catPredObj && catPredObj.color) {
+                colorEvento = catPredObj.color;
+            }
+        }
+        // Si todavía no hay color, usar el predeterminado
+        if (!colorEvento) {
+            colorEvento = '#007bff';
+        }
+        
+        const colorInput = document.getElementById('evento-color');
+        if (colorInput) {
+            colorInput.value = colorEvento;
+            // Si el evento tenía color propio (diferente del de la categoría), marcar que fue modificado manualmente
+            // Solo si el color del evento es diferente al de la categoría predominante, es que fue modificado manualmente
+            if (evento.color) {
+                const catPredObj = categoriaPredominanteObj || 
+                                  categorias.find(c => c._id === categoriaPredominanteId);
+                const colorCategoria = catPredObj?.color || null;
+                // Si el color del evento es diferente al de la categoría, fue modificado manualmente
+                if (colorCategoria && evento.color !== colorCategoria) {
+                    colorInput.dataset.manualChange = 'true';
+                } else {
+                    // Si coincide con la categoría, permitir cambios automáticos
+                    colorInput.dataset.manualChange = 'false';
+                }
+            } else {
+                // Si no tenía color, no marcar como manual para permitir cambios automáticos
+                colorInput.dataset.manualChange = 'false';
+            }
+        }
         
         // Actualizar visibilidad del precio
         const precioGroup = document.getElementById('precio-group');

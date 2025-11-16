@@ -6,18 +6,53 @@ const crearEvento = async (request, response) => {
     try {
         const eventoData = request.body;
         
-        // Validar que la categoría existe
-        const categoria = await Categoria.findById(eventoData.categoria);
-        if (!categoria) {
+        // Compatibilidad hacia atrás: si viene 'categoria' en lugar de 'categorias', convertir
+        if (eventoData.categoria && !eventoData.categorias) {
+            eventoData.categorias = [eventoData.categoria];
+            if (!eventoData.categoriaPredominante) {
+                eventoData.categoriaPredominante = eventoData.categoria;
+            }
+        }
+        
+        // Validar que existe al menos una categoría
+        if (!eventoData.categorias || eventoData.categorias.length === 0) {
             return response.status(400).json({ 
-                msg: 'La categoría especificada no existe' 
+                msg: 'Debe especificar al menos una categoría' 
+            });
+        }
+        
+        // Validar que existe la categoría predominante
+        if (!eventoData.categoriaPredominante) {
+            return response.status(400).json({ 
+                msg: 'Debe especificar una categoría predominante' 
+            });
+        }
+        
+        // Validar que la categoría predominante está en el array de categorías
+        if (!eventoData.categorias.includes(eventoData.categoriaPredominante)) {
+            return response.status(400).json({ 
+                msg: 'La categoría predominante debe estar en el array de categorías' 
+            });
+        }
+        
+        // Validar que todas las categorías existen
+        const categoriasExistentes = await Categoria.find({
+            _id: { $in: eventoData.categorias }
+        });
+        
+        if (categoriasExistentes.length !== eventoData.categorias.length) {
+            return response.status(400).json({ 
+                msg: 'Una o más categorías especificadas no existen' 
             });
         }
 
         const evento = new Evento(eventoData);
         const data = await evento.save();
         
-        // Poblar la categoría en la respuesta
+        // Poblar las categorías en la respuesta
+        await data.populate('categorias', 'nombre descripcion icono color');
+        await data.populate('categoriaPredominante', 'nombre descripcion icono color');
+        // Mantener compatibilidad hacia atrás
         await data.populate('categoria', 'nombre descripcion icono color');
         
         response.status(201).json({ 
@@ -37,7 +72,15 @@ const listarEventos = async (request, response) => {
         let filtros = {};
         
         if (tipo) filtros.tipo = tipo;
-        if (categoria) filtros.categoria = categoria;
+        
+        // Filtrar por categoría: puede ser por categoría predominante o por cualquiera de las categorías
+        if (categoria) {
+            filtros.$or = [
+                { categoriaPredominante: categoria },
+                { categorias: categoria },
+                { categoria: categoria } // Compatibilidad hacia atrás
+            ];
+        }
         
         // Por defecto mostrar solo eventos activos si no se especifica
         if (activo === undefined) {
@@ -60,7 +103,9 @@ const listarEventos = async (request, response) => {
         }
 
         const eventos = await Evento.find(filtros)
-            .populate('categoria', 'nombre descripcion icono color')
+            .populate('categorias', 'nombre descripcion icono color')
+            .populate('categoriaPredominante', 'nombre descripcion icono color')
+            .populate('categoria', 'nombre descripcion icono color') // Compatibilidad hacia atrás
             .sort({ fecha: 1 });
 
         response.status(200).json({
@@ -79,7 +124,9 @@ const obtenerEventoPorId = async (request, response) => {
     try {
         const id = request.params.id;
         const evento = await Evento.findById(id)
-            .populate('categoria', 'nombre descripcion icono color');
+            .populate('categorias', 'nombre descripcion icono color')
+            .populate('categoriaPredominante', 'nombre descripcion icono color')
+            .populate('categoria', 'nombre descripcion icono color'); // Compatibilidad hacia atrás
         
         if (evento) {
             response.status(200).json({ 
@@ -116,13 +163,50 @@ const actualizarEventoPorId = async (request, response) => {
         const id = request.params.id;
         const updateData = request.body;
         
-        // Si se actualiza la categoría, validar que existe
-        if (updateData.categoria) {
-            const categoria = await Categoria.findById(updateData.categoria);
-            if (!categoria) {
+        // Compatibilidad hacia atrás: si viene 'categoria' en lugar de 'categorias', convertir
+        if (updateData.categoria && !updateData.categorias) {
+            updateData.categorias = [updateData.categoria];
+            if (!updateData.categoriaPredominante) {
+                updateData.categoriaPredominante = updateData.categoria;
+            }
+        }
+        
+        // Si se actualizan las categorías, validar que existen
+        if (updateData.categorias) {
+            if (updateData.categorias.length === 0) {
                 return response.status(400).json({ 
-                    msg: 'La categoría especificada no existe' 
+                    msg: 'Debe especificar al menos una categoría' 
                 });
+            }
+            
+            const categoriasExistentes = await Categoria.find({
+                _id: { $in: updateData.categorias }
+            });
+            
+            if (categoriasExistentes.length !== updateData.categorias.length) {
+                return response.status(400).json({ 
+                    msg: 'Una o más categorías especificadas no existen' 
+                });
+            }
+            
+            // Validar que la categoría predominante está en el array (si se actualiza)
+            if (updateData.categoriaPredominante && !updateData.categorias.includes(updateData.categoriaPredominante)) {
+                return response.status(400).json({ 
+                    msg: 'La categoría predominante debe estar en el array de categorías' 
+                });
+            }
+        }
+        
+        // Si solo se actualiza la categoría predominante, validar que existe en categorias
+        if (updateData.categoriaPredominante && !updateData.categorias) {
+            const eventoActual = await Evento.findById(id);
+            if (eventoActual) {
+                const categoriasActuales = eventoActual.categorias || (eventoActual.categoria ? [eventoActual.categoria] : []);
+                if (!categoriasActuales.includes(updateData.categoriaPredominante)) {
+                    return response.status(400).json({ 
+                        msg: 'La categoría predominante debe estar en el array de categorías del evento' 
+                    });
+                }
             }
         }
 
@@ -130,7 +214,10 @@ const actualizarEventoPorId = async (request, response) => {
             id, 
             updateData, 
             { new: true }
-        ).populate('categoria', 'nombre descripcion icono color');
+        )
+        .populate('categorias', 'nombre descripcion icono color')
+        .populate('categoriaPredominante', 'nombre descripcion icono color')
+        .populate('categoria', 'nombre descripcion icono color'); // Compatibilidad hacia atrás
         
         if (evento) {
             response.status(200).json({ 
@@ -166,7 +253,10 @@ const buscarEventosPorUbicacion = async (request, response) => {
                 $lte: parseFloat(lng) + (radio / (111000 * Math.cos(parseFloat(lat) * Math.PI / 180)))
             },
             activo: true
-        }).populate('categoria', 'nombre descripcion icono color');
+        })
+        .populate('categorias', 'nombre descripcion icono color')
+        .populate('categoriaPredominante', 'nombre descripcion icono color')
+        .populate('categoria', 'nombre descripcion icono color'); // Compatibilidad hacia atrás
 
         response.status(200).json({
             msg: 'Eventos encontrados por ubicación',
