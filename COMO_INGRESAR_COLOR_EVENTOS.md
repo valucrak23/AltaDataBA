@@ -193,9 +193,25 @@ El badge `[Recital]` tendrá el color que hayas asignado al evento.
 
 ## 🔄 Migración de Eventos Existentes
 
-Si ya tienes eventos en la base de datos **sin el campo color**, puedes agregarlo:
+**⚠️ IMPORTANTE**: Los eventos que ya existen en tu base de datos NO tienen el campo `color` automáticamente. Solo los **eventos nuevos** que crees desde ahora tendrán el color por defecto.
 
-### Desde MongoDB Shell:
+### ✅ Opción 1: Script de Migración Automático (Recomendado)
+
+Ejecuta el script de migración que está en el proyecto:
+
+```bash
+node migracion-color-eventos.js
+```
+
+Este script:
+- ✅ Busca todos los eventos que no tienen el campo `color`
+- ✅ Les asigna un color según su tipo:
+  - **Recitales**: `#ff6b6b` (rojo claro)
+  - **Eventos Culturales**: `#4ecdc4` (turquesa)
+  - **Talleres**: `#ffe66d` (amarillo claro)
+- ✅ Muestra un resumen de cuántos eventos se actualizaron
+
+### Opción 2: Desde MongoDB Shell:
 
 ```javascript
 // Dar color azul a todos los eventos que no tienen color
@@ -205,23 +221,13 @@ db.eventos.updateMany(
 )
 ```
 
-### Desde Node.js (script de migración):
+### Opción 3: Manualmente desde el Frontend
 
-```javascript
-import mongoose from 'mongoose';
-import Evento from './models/EventoModel.js';
+1. Edita cada evento existente desde el frontend
+2. Selecciona un color en el selector
+3. Guarda el evento
 
-// Conectar a la BD
-mongoose.connect(process.env.URI_DB);
-
-// Actualizar eventos sin color
-await Evento.updateMany(
-    { color: { $exists: false } },
-    { $set: { color: "#007bff" } }
-);
-
-console.log('Migración completada');
-```
+**Nota**: Esta opción es más lenta si tienes muchos eventos.
 
 ---
 
